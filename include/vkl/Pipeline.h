@@ -78,8 +78,11 @@ namespace vkl
 	class Pipeline
 	{
 	public:
+		Pipeline() = delete;
+		Pipeline(const Device& device, const PipelineDescription& description);
 
+		VkPipeline handle() const;
 	private:
-
+		VkPipeline _pipeline;
 	};
 }

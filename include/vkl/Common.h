@@ -25,6 +25,12 @@ namespace vkl
     class Window;
     class Surface;
     class RenderPass;
+    class Pipeline;
+    class PipelineDescription;
+    class UniformBuffer;
+    class VertexBuffer;
+    class TextureBuffer;
+    class DrawCall;
 
     struct WindowSize
     {

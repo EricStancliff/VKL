@@ -12,7 +12,12 @@ set(vkl_source
 	./Surface.cpp
 	./Pipeline.cpp
 	./Shader.cpp
- )
+	./RenderObject.cpp
+ 	./VertexBuffer.cpp
+	./UniformBuffer.cpp
+	./TextureBuffer.cpp
+	./DrawCall.cpp
+)
 
 set(vkl_include_dir ${CMAKE_SOURCE_DIR}/include/vkl)
 set(vkl_includes 
@@ -29,12 +34,22 @@ set(vkl_includes
 	${vkl_include_dir}/VKL_EXPORT.h
 	${vkl_include_dir}/Pipeline.h
 	${vkl_include_dir}/Shader.h
+	${vkl_include_dir}/RenderObject.h
+	${vkl_include_dir}/VertexBuffer.h
+	${vkl_include_dir}/UniformBuffer.h
+	${vkl_include_dir}/TextureBuffer.h
+	${vkl_include_dir}/DrawCall.h
 )
 
 add_library(vkl SHARED ${vkl_source} ${vkl_includes})
 
 get_filename_component(VULKAN_LIB_DIR ${Vulkan_LIBRARY} DIRECTORY)
+
+if(WIN32)
 set(SHADERC_LIB ${VULKAN_LIB_DIR}/shaderc_shared.lib)
+else()
+set(SHADERC_LIB ${VULKAN_LIB_DIR}/shaderc_shared.so)
+endif()
 
 target_link_libraries(vkl PUBLIC unofficial::vulkan-memory-allocator::vulkan-memory-allocator glfw Vulkan::Vulkan ${SHADERC_LIB})
 

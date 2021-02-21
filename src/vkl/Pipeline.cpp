@@ -195,4 +195,23 @@ namespace vkl
 	{
 		return _textures;
 	}
+
+
+
+
+
+
+
+	Pipeline::Pipeline(const Device& device, const PipelineDescription& description)
+	{
+
+	}
+
+	VkPipeline Pipeline::handle() const
+	{
+		return _pipeline;
+	}
+
+
+
 }
