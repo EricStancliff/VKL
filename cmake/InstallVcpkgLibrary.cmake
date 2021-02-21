@@ -4,7 +4,7 @@ function(InitVcpkg)
 set(VCPKG_TOOLCHAIN_FILE "" CACHE FILEPATH "Path to your vcpkg toolchain file.")
 
 if(NOT EXISTS ${VCPKG_TOOLCHAIN_FILE})
-MESSAGE(FATAL_ERROR "You must configure your vcpkg toolchain file to continue...\npath_to_vcpkg\scripts\buildsystems\vcpkg.cmake")
+MESSAGE(FATAL_ERROR "You must configure your vcpkg toolchain file to continue... path_to_vcpkg/scripts/buildsystems/vcpkg.cmake")
 endif()
 
 get_filename_component(VCPKG_TOOLCHAIN_DIR ${VCPKG_TOOLCHAIN_FILE} DIRECTORY)
@@ -52,4 +52,3 @@ endfunction()
 function(InstallExternal Target)
 InstallExternal_Ext(${Target} ${Target})
 endfunction()
-
