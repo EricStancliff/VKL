@@ -32,6 +32,11 @@ namespace vkl
 		VkFormat imageFormat() const;
 		VkFormat depthFormat() const;
 
+		uint32_t graphicsFamilyQueueIndex() const;
+		uint32_t presentFamilyQueueIndex() const;
+
+		size_t framesInFlight() const;
+
 	private:
 		void init(const Instance& instance, const Device& device, const Surface& surface, const SwapChainOptions& options);
 		
@@ -63,5 +68,7 @@ namespace vkl
 		std::vector<VkFence> _inFlightFences;
 		std::vector<VkFence> _imagesInFlight;
 
+		uint32_t _graphicsFamilyQueueIndex{ 0 };
+		uint32_t _presentFamilyQueueIndex{ 0 };
 	};
 }

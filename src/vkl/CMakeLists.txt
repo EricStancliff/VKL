@@ -29,7 +29,7 @@ set(vkl_includes
 
 add_library(vkl SHARED ${vkl_source} ${vkl_includes})
 
-target_link_libraries(vkl PUBLIC unofficial::vulkan-memory-allocator::vulkan-memory-allocator glfw Vulkan::Vulkan)
+target_link_libraries(vkl PUBLIC unofficial::vulkan-memory-allocator::vulkan-memory-allocator glfw Vulkan::Vulkan TBB::tbb)
 
 target_compile_definitions(vkl PRIVATE VKL_LIB)
 target_include_directories(vkl PUBLIC ${vkl_include_dir} ${Vulkan_INCLUDE_DIR} PRIVATE )

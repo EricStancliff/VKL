@@ -56,6 +56,11 @@ namespace vkl
 		return { (uint32_t)width, (uint32_t)height };
 	}
 
+	WindowHandle Window::handle() const
+	{
+		return (void*)_windowData->window;
+	}
+
 	VkSurfaceKHR Window::createSurfaceHandle_Private(const Instance& instance) const
 	{
 		VkSurfaceKHR surface;

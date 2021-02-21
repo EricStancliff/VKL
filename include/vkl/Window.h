@@ -9,6 +9,8 @@ namespace vkl
 
 	struct WindowData;
 
+	using WindowHandle = void*;
+
 	class VKL_EXPORT Window
 	{
 	public:
@@ -19,6 +21,9 @@ namespace vkl
 		static const char** getRequiredInstanceExtensions(uint32_t* count);
 
 		WindowSize getWindowSize() const;
+
+		//If you need the GLFWwindow*
+		WindowHandle handle() const;
 
 	private:
 		friend class Surface;

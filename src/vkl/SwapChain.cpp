@@ -124,6 +124,10 @@ namespace vkl
         createInfo.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
 
         QueueFamilyIndices indices = findQueueFamilies(device.physicalDeviceHandle(), surface.handle());
+        
+        _graphicsFamilyQueueIndex = indices.graphicsFamily.value();
+        _presentFamilyQueueIndex = indices.presentFamily.value();
+
         uint32_t queueFamilyIndices[] = { indices.graphicsFamily.value(), indices.presentFamily.value() };
 
         if (indices.graphicsFamily != indices.presentFamily) {
@@ -216,6 +220,21 @@ namespace vkl
     VkFormat SwapChain::depthFormat() const
     {
         return _swapChainDepthFormat;
+    }
+
+    uint32_t SwapChain::graphicsFamilyQueueIndex() const
+    {
+        return _graphicsFamilyQueueIndex;
+    }
+
+    uint32_t SwapChain::presentFamilyQueueIndex() const
+    {
+        return _presentFamilyQueueIndex;
+    }
+
+    size_t SwapChain::framesInFlight() const
+    {
+        return _swapChainImageViews.size();
     }
 
     void SwapChain::createSyncObjects(const Instance& instance, const Device& device, const Surface& surface, const SwapChainOptions& options)
