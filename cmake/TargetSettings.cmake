@@ -55,7 +55,7 @@ set_target_properties( ${Target}
 else()
 set_target_properties( ${Target}
     PROPERTIES
-    LIBRARY_OUTPUT_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}
+    LIBRARY_OUTPUT_DIRECTORY "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}"
     FOLDER "Libraries"
 )
 endif()

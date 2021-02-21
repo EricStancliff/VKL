@@ -20,7 +20,7 @@ set(vkl_source
 )
 
 set(vkl_include_dir ${CMAKE_SOURCE_DIR}/include/vkl)
-set(vkl_includes 
+set(vkl_includes
 	${vkl_include_dir}/Window.h
 	${vkl_include_dir}/CommandDispatcher.h
 	${vkl_include_dir}/Common.h
@@ -48,7 +48,9 @@ get_filename_component(VULKAN_LIB_DIR ${Vulkan_LIBRARY} DIRECTORY)
 if(WIN32)
 set(SHADERC_LIB ${VULKAN_LIB_DIR}/shaderc_shared.lib)
 else()
-set(SHADERC_LIB ${VULKAN_LIB_DIR}/shaderc_shared.so)
+    find_package(PkgConfig REQUIRED)
+    pkg_check_modules(SHADERC REQUIRED shaderc)
+    set(SHADERC_LIB ${SHADERC_LIBRARIES})
 endif()
 
 target_link_libraries(vkl PUBLIC unofficial::vulkan-memory-allocator::vulkan-memory-allocator glfw Vulkan::Vulkan ${SHADERC_LIB})
