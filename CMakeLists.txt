@@ -23,6 +23,7 @@ InitVcpkg()
 
 InstallExternal(glfw3)
 InstallExternal_Ext(vulkan-memory-allocator unofficial-vulkan-memory-allocator)
+#InstallExternal_Ext(shaderc glslang)
 
 #add projects
 add_subdirectory(src)

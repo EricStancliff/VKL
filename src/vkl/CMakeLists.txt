@@ -10,6 +10,8 @@ set(vkl_source
 	./Instance.cpp
 	./Reflect.cpp
 	./Surface.cpp
+	./Pipeline.cpp
+	./Shader.cpp
  )
 
 set(vkl_include_dir ${CMAKE_SOURCE_DIR}/include/vkl)
@@ -25,11 +27,16 @@ set(vkl_includes
 	${vkl_include_dir}/Surface.h
 	${vkl_include_dir}/SwapChain.h
 	${vkl_include_dir}/VKL_EXPORT.h
+	${vkl_include_dir}/Pipeline.h
+	${vkl_include_dir}/Shader.h
 )
 
 add_library(vkl SHARED ${vkl_source} ${vkl_includes})
 
-target_link_libraries(vkl PUBLIC unofficial::vulkan-memory-allocator::vulkan-memory-allocator glfw Vulkan::Vulkan)
+get_filename_component(VULKAN_LIB_DIR ${Vulkan_LIBRARY} DIRECTORY)
+set(SHADERC_LIB ${VULKAN_LIB_DIR}/shaderc_shared.lib)
+
+target_link_libraries(vkl PUBLIC unofficial::vulkan-memory-allocator::vulkan-memory-allocator glfw Vulkan::Vulkan ${SHADERC_LIB})
 
 target_compile_definitions(vkl PRIVATE VKL_LIB)
 target_include_directories(vkl PUBLIC ${vkl_include_dir} ${Vulkan_INCLUDE_DIR} PRIVATE )

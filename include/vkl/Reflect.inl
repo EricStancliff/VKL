@@ -5,6 +5,7 @@
 #include <any>
 #include <functional>
 #include <memory>
+#include <Common.h>
 
 namespace reflect
 {
@@ -190,7 +191,7 @@ namespace reflect
 	type_dictionary& _types_unsafe();
 
 
-	class NullType
+	class VKL_EXPORT NullType
 	{
 	public:
 		virtual const reflection& reflect() const = 0;
