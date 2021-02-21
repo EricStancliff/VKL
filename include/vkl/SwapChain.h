@@ -36,6 +36,7 @@ namespace vkl
 		uint32_t presentFamilyQueueIndex() const;
 
 		size_t framesInFlight() const;
+		size_t frame() const;
 
 	private:
 		void init(const Instance& instance, const Device& device, const Surface& surface, const SwapChainOptions& options);
@@ -70,5 +71,7 @@ namespace vkl
 
 		uint32_t _graphicsFamilyQueueIndex{ 0 };
 		uint32_t _presentFamilyQueueIndex{ 0 };
+
+		size_t _frame{ 0 };
 	};
 }

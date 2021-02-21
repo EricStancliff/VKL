@@ -197,11 +197,6 @@ namespace vkl
 	}
 
 
-
-
-
-
-
 	Pipeline::Pipeline(const Device& device, const PipelineDescription& description)
 	{
 
@@ -212,6 +207,9 @@ namespace vkl
 		return _pipeline;
 	}
 
+	PipelineManager::PipelineManager(const Device& device)
+	{
 
+	}
 
 }

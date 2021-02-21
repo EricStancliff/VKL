@@ -3,6 +3,7 @@
 #include <Common.h>
 
 #include <filesystem>
+#include <typeindex>
 
 namespace vkl
 {
@@ -84,5 +85,14 @@ namespace vkl
 		VkPipeline handle() const;
 	private:
 		VkPipeline _pipeline;
+	};
+
+	class PipelineManager
+	{
+	public:
+		PipelineManager() = delete;
+		PipelineManager(const Device& device);
+	private:
+		std::vector<std::pair<std::type_index, Pipeline>> _pipelines;
 	};
 }

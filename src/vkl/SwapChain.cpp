@@ -237,6 +237,11 @@ namespace vkl
         return _swapChainImageViews.size();
     }
 
+    size_t SwapChain::frame() const
+    {
+        return _frame;
+    }
+
     void SwapChain::createSyncObjects(const Instance& instance, const Device& device, const Surface& surface, const SwapChainOptions& options)
     {
         _imageAvailableSemaphores.resize(MAX_FRAMES_IN_FLIGHT);

@@ -31,26 +31,22 @@ namespace vkl
 		static void populateReflection(reflection_data& reflection);
 	public:
 
-		std::span<const VertexBuffer> vbos() const;
-		std::span<const UniformBuffer> uniforms() const;
-		std::span<const TextureBuffer> textures() const;
-		std::span<const DrawCall> drawCalls() const;
 
-		std::span<VertexBuffer> vbos();
-		std::span<UniformBuffer> uniforms();
-		std::span<TextureBuffer> textures();
-		std::span<DrawCall> drawCalls();
+		std::span< std::shared_ptr<VertexBuffer>> vbos();
+		std::span< std::shared_ptr<UniformBuffer>> uniforms();
+		std::span< std::shared_ptr<TextureBuffer>> textures();
+		std::span< std::shared_ptr<DrawCall>> drawCalls();
 
 	protected:
-		void addVBO(VertexBuffer&& vbo);
-		void addUniform(UniformBuffer&& uniform);
-		void addTexture(TextureBuffer&& texture);
-		void addDrawCall(DrawCall&& draw);
+		void addVBO(std::shared_ptr<VertexBuffer> vbo);
+		void addUniform(std::shared_ptr<UniformBuffer> uniform);
+		void addTexture(std::shared_ptr<TextureBuffer>texture);
+		void addDrawCall(std::shared_ptr<DrawCall> draw);
 
 	private:
-		std::vector<VertexBuffer> _vbos;
-		std::vector<UniformBuffer> _uniforms;
-		std::vector<TextureBuffer> _textures;
-		std::vector<DrawCall> _drawCalls;
+		std::vector<std::shared_ptr<VertexBuffer>> _vbos;
+		std::vector<std::shared_ptr<UniformBuffer>> _uniforms;
+		std::vector<std::shared_ptr<TextureBuffer>> _textures;
+		std::vector<std::shared_ptr<DrawCall>> _drawCalls;
 	};
 }

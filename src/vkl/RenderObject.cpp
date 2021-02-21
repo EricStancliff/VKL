@@ -5,51 +5,41 @@ namespace vkl
 	void RenderObject::populateReflection(reflection_data& reflection)
 	{
 	}
-	std::span<const VertexBuffer> RenderObject::vbos() const
+
+
+	std::span<std::shared_ptr<VertexBuffer>> RenderObject::vbos()
 	{
 		return _vbos;
 	}
-	std::span<const UniformBuffer> RenderObject::uniforms() const
+
+	std::span<std::shared_ptr<UniformBuffer>> RenderObject::uniforms()
 	{
 		return _uniforms;
 	}
-	std::span<const TextureBuffer> RenderObject::textures() const
+
+	std::span<std::shared_ptr<TextureBuffer>> RenderObject::textures()
 	{
 		return _textures;
 	}
-	std::span<const DrawCall> RenderObject::drawCalls() const
+
+	std::span<std::shared_ptr<DrawCall>> RenderObject::drawCalls()
 	{
 		return _drawCalls;
 	}
-	std::span<VertexBuffer> RenderObject::vbos() 
-	{
-		return _vbos;
-	}
-	std::span<UniformBuffer> RenderObject::uniforms() 
-	{
-		return _uniforms;
-	}
-	std::span<TextureBuffer> RenderObject::textures() 
-	{
-		return _textures;
-	}
-	std::span<DrawCall> RenderObject::drawCalls() 
-	{
-		return _drawCalls;
-	}
-	void RenderObject::addVBO(VertexBuffer&& vbo)
+
+	void RenderObject::addVBO(std::shared_ptr<VertexBuffer> vbo)
 	{
 		_vbos.emplace_back(std::move(vbo));
 	}
-	void RenderObject::addUniform(UniformBuffer&& uniform)
+	void RenderObject::addUniform(std::shared_ptr<UniformBuffer> uniform)
 	{
 		_uniforms.emplace_back(std::move(uniform));
 	}
-	void RenderObject::addTexture(TextureBuffer&& texture)
+	void RenderObject::addTexture(std::shared_ptr<TextureBuffer> texture)
 	{
 		_textures.emplace_back(std::move(texture));
 	}
-	void RenderObject::addDrawCall(DrawCall&& draw)
+	void RenderObject::addDrawCall(std::shared_ptr<DrawCall> draw)
 	{
 		_drawCalls.emplace_back(std::move(draw));
 	}
