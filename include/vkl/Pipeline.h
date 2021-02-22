@@ -83,17 +83,25 @@ namespace vkl
 	{
 	public:
 		Pipeline() = delete;
-		Pipeline(const Device& device, const PipelineDescription& description, const RenderPass& renderPass);
+		Pipeline(const Device& device, const SwapChain& swapChain, const PipelineDescription& description, const RenderPass& renderPass);
 		Pipeline(const Pipeline&) = delete;
 		Pipeline(Pipeline&&) noexcept = default;
 
 		VkPipeline handle() const;
+		VkDescriptorSetLayout descriptorSetLayoutHandle() const;
+		VkDescriptorPool descriptorPoolHandle() const;
+		VkPipelineLayout pipelineLayoutHandle() const;
 
 		size_t type() const;
 	private:
+
+		void createDescriptorSetLayout(const Device& device, const SwapChain& swapChain, const PipelineDescription& description, const RenderPass& renderPass);
+		void createPipeline(const Device& device, const SwapChain& swapChain, const PipelineDescription& description, const RenderPass& renderPass);
+
 		VkPipeline _pipeline{ VK_NULL_HANDLE };
 		VkPipelineLayout _pipelineLayout{ VK_NULL_HANDLE };
 		VkDescriptorSetLayout _descriptorSetLayout{ VK_NULL_HANDLE };
+		VkDescriptorPool _descriptorPool{ VK_NULL_HANDLE };
 		size_t _type{ 0 };
 	};
 	/*****************************************************************************************************************/
@@ -102,9 +110,9 @@ namespace vkl
 	{
 	public:
 		PipelineManager() = delete;
-		PipelineManager(const Device& device, const RenderPass& renderPass);
+		PipelineManager(const Device& device, const SwapChain& swapChain, const RenderPass& renderPass);
 
-		VkPipeline pipelineForType(size_t type) const;
+		const Pipeline* pipelineForType(size_t type) const;
 	private:
 		std::vector<Pipeline> _pipelines;
 	};

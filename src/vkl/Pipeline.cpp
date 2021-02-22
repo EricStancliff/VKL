@@ -5,6 +5,9 @@
 #include <RenderObject.h>
 #include <Device.h>
 #include <RenderPass.h>
+#include <SwapChain.h>
+
+#include <array>
 
 #include <shared_mutex>
 
@@ -211,7 +214,66 @@ namespace vkl
 	/*****************************************************************************************************************/
 
 
-	Pipeline::Pipeline(const Device& device, const PipelineDescription& description, const RenderPass& renderPass)
+	Pipeline::Pipeline(const Device& device, const SwapChain& swapChain, const PipelineDescription& description, const RenderPass& renderPass)
+	{
+		createDescriptorSetLayout(device, swapChain, description, renderPass);
+		createPipeline(device, swapChain, description, renderPass);
+	}
+
+	void Pipeline::createDescriptorSetLayout(const Device& device, const SwapChain& swapChain, const PipelineDescription& description, const RenderPass& renderPass)
+	{
+		//Descriptor Pool
+		std::array<VkDescriptorPoolSize, 2> poolSizes{};
+		poolSizes[0].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+		poolSizes[0].descriptorCount = static_cast<uint32_t>(swapChain.framesInFlight());
+		poolSizes[1].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+		poolSizes[1].descriptorCount = static_cast<uint32_t>(swapChain.framesInFlight());
+
+		VkDescriptorPoolCreateInfo poolInfo{};
+		poolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
+		poolInfo.poolSizeCount = static_cast<uint32_t>(poolSizes.size());
+		poolInfo.pPoolSizes = poolSizes.data();
+		poolInfo.maxSets = static_cast<uint32_t>(swapChain.framesInFlight());
+
+		if (vkCreateDescriptorPool(device.handle(), &poolInfo, nullptr, &_descriptorPool) != VK_SUCCESS) {
+			//TODO - LOG
+		}
+
+		//Descriptor Set Layout
+		std::vector< VkDescriptorSetLayoutBinding> layoutBindings;
+		for (auto&& uniform : description.uniforms())
+		{
+			VkDescriptorSetLayoutBinding uboLayoutBinding{};
+			uboLayoutBinding.binding = uniform.binding;
+			uboLayoutBinding.descriptorCount = 1;
+			uboLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+			uboLayoutBinding.pImmutableSamplers = nullptr;
+			uboLayoutBinding.stageFlags = VK_SHADER_STAGE_ALL;
+			layoutBindings.push_back(uboLayoutBinding);
+		}
+		for (auto&& texture : description.textures())
+		{
+			VkDescriptorSetLayoutBinding texLayoutBinding{};
+			texLayoutBinding.binding = texture.binding;
+			texLayoutBinding.descriptorCount = 1;
+			texLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+			texLayoutBinding.pImmutableSamplers = nullptr;
+			texLayoutBinding.stageFlags = VK_SHADER_STAGE_ALL;
+			layoutBindings.push_back(texLayoutBinding);
+		}
+
+		VkDescriptorSetLayoutCreateInfo layoutInfo{};
+		layoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+		layoutInfo.bindingCount = static_cast<uint32_t>(layoutBindings.size());
+		layoutInfo.pBindings = layoutBindings.data();
+
+		if (vkCreateDescriptorSetLayout(device.handle(), &layoutInfo, nullptr, &_descriptorSetLayout) != VK_SUCCESS) {
+			//TODO - LOG
+		}
+
+	}
+
+	void Pipeline::createPipeline(const Device& device, const SwapChain& swapChain, const PipelineDescription& description, const RenderPass& renderPass)
 	{
 		std::vector<VkPipelineShaderStageCreateInfo> shaderStageCreateInfos;
 		std::vector<ShaderModule> shaderModules;
@@ -222,7 +284,7 @@ namespace vkl
 				continue;
 
 			ShaderModule shaderMod(device, shader.shader, shader.stage);
-			
+
 			VkPipelineShaderStageCreateInfo createInfo{};
 			createInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
 			createInfo.stage = shader.stage;
@@ -317,7 +379,7 @@ namespace vkl
 		std::vector<VkDynamicState> dynamicStates;
 		dynamicStates.push_back(VK_DYNAMIC_STATE_VIEWPORT);
 		dynamicStates.push_back(VK_DYNAMIC_STATE_SCISSOR);
-		
+
 
 		VkPipelineDynamicStateCreateInfo dynamicState{};
 		dynamicState.sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO;
@@ -353,9 +415,20 @@ namespace vkl
 			//TODO - LOG
 		}
 
-		for(auto&& shaderMod : shaderModules)
+		for (auto&& shaderMod : shaderModules)
 			vkDestroyShaderModule(device.handle(), shaderMod.handle(), nullptr);
 
+
+	}
+
+	VkDescriptorPool Pipeline::descriptorPoolHandle() const
+	{
+		return _descriptorPool;
+	}
+
+	VkDescriptorSetLayout Pipeline::descriptorSetLayoutHandle() const
+	{
+		return _descriptorSetLayout;
 	}
 
 	VkPipeline Pipeline::handle() const
@@ -367,9 +440,12 @@ namespace vkl
 	{
 		return _type;
 	}
-
+	VkPipelineLayout Pipeline::pipelineLayoutHandle() const
+	{
+		return _pipelineLayout;
+	}
 	/*****************************************************************************************************************/
-	PipelineManager::PipelineManager(const Device& device, const RenderPass& renderPass)
+	PipelineManager::PipelineManager(const Device& device, const SwapChain& swapChain, const RenderPass& renderPass)
 	{
 		reflect::forAllTypesDerivedFrom<RenderObject>([&](const reflect::reflection& data) {
 			const RenderObjectDescription* roDesc = dynamic_cast<const RenderObjectDescription*>(data.data);
@@ -383,20 +459,20 @@ namespace vkl
 				return pipePair.type() < index;
 				});
 
-			Pipeline pipeline(device, pipelineDesc, renderPass);
+			Pipeline pipeline(device, swapChain, pipelineDesc, renderPass);
 			_pipelines.emplace_back(std::move(pipeline));
 
 		});
 
 	}
-	VkPipeline PipelineManager::pipelineForType(size_t type) const
+	const Pipeline* PipelineManager::pipelineForType(size_t type) const
 	{
 		auto findWhere = std::lower_bound(_pipelines.begin(), _pipelines.end(), type, [&](const Pipeline& pipePair, const size_t& index) {
 			return pipePair.type() < index;
 			});
 		if (findWhere == _pipelines.end())
-			return VK_NULL_HANDLE;
-		return findWhere->handle();
+			return nullptr;
+		return &(*findWhere);
 	}
 
 }

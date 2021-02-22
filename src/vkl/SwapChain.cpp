@@ -242,6 +242,11 @@ namespace vkl
         return _frame;
     }
 
+    VkFramebuffer SwapChain::frameBuffer(size_t frame) const
+    {
+        return _swapChainFramebuffers[frame];
+    }
+
     void SwapChain::createSyncObjects(const Instance& instance, const Device& device, const Surface& surface, const SwapChainOptions& options)
     {
         _imageAvailableSemaphores.resize(MAX_FRAMES_IN_FLIGHT);

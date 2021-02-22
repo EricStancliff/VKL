@@ -86,4 +86,8 @@ namespace vkl
 	{
 		return _renderPass;
 	}
+    const RenderPassOptions& RenderPass::options() const
+    {
+        return _options;
+    }
 }

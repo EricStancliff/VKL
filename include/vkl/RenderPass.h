@@ -6,6 +6,8 @@ namespace vkl
 	struct RenderPassOptions
 	{
 		//TODO - expand to handle different formats and subpass dependencies
+		VkClearColorValue clearColor = { 0.f, 0.f, 0.f, 1.f };
+		VkClearDepthStencilValue clearDepthStencil = { 1.f, 0 };
 	};
 
 
@@ -20,7 +22,9 @@ namespace vkl
 
 		VkRenderPass handle() const;
 
+		const RenderPassOptions& options() const;
 	private:
 		VkRenderPass _renderPass{ VK_NULL_HANDLE };
+		RenderPassOptions _options;
 	};
 }

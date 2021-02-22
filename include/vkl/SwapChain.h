@@ -38,6 +38,7 @@ namespace vkl
 		size_t framesInFlight() const;
 		size_t frame() const;
 
+		VkFramebuffer frameBuffer(size_t frame) const;
 	private:
 		void init(const Instance& instance, const Device& device, const Surface& surface, const SwapChainOptions& options);
 		
