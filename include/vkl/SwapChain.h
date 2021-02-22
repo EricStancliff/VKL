@@ -12,7 +12,6 @@ namespace vkl
 		//present mode
 		VkPresentModeKHR presentMode{ VK_PRESENT_MODE_MAILBOX_KHR };
 
-		//For use with a windowless swapchain
 		WindowSize swapChainExtent;
 	};
 
@@ -20,9 +19,15 @@ namespace vkl
 	{
 	public:
 		SwapChain() = delete;
-		SwapChain(const Instance& instance, const Device& device, const Surface& surface, const Window& window, SwapChainOptions options = {});
-		SwapChain(const Instance& instance, const Device& device, const Surface& surface, SwapChainOptions options = {});
-		~SwapChain() = delete;
+		~SwapChain() = default;
+		SwapChain(const SwapChain&) = delete;
+		SwapChain(SwapChain&&) noexcept = default;
+		SwapChain& operator=(SwapChain&&) noexcept = default;
+		SwapChain& operator=(const SwapChain&) = delete;
+
+		SwapChain(const Device& device, const Surface& surface, SwapChainOptions options = {});
+
+		void cleanUp(const Device& device);
 
 		//must call after creation before you attempt to render anything
 		//don't need all of them, just one "compatible" render pass to make frame buffers
@@ -39,14 +44,22 @@ namespace vkl
 		size_t frame() const;
 
 		VkFramebuffer frameBuffer(size_t frame) const;
+
+		VkExtent2D swapChainExtent() const;
+
+		void prepNextFrame(const Device& device, const Surface& surface, const CommandDispatcher& commands, const RenderPass& compatiblePass, const WindowSize& targetExtent);
+		void swap(const Device& device, const Surface& surface, const CommandDispatcher& commands, const RenderPass& compatiblePass, const WindowSize& targetExtent);
+
 	private:
-		void init(const Instance& instance, const Device& device, const Surface& surface, const SwapChainOptions& options);
+		void reset(const Device& device, const Surface& surface, const CommandDispatcher& commands, const RenderPass& compatiblePass, const WindowSize& targetExtent);
+
+		void init(const Device& device, const Surface& surface);
 		
-		void createSwapChain(const Instance& instance, const Device& device, const Surface& surface, const SwapChainOptions& options);
-		void createImageViews(const Instance& instance, const Device& device, const Surface& surface, const SwapChainOptions& options);
-		void createColorResources(const Instance& instance, const Device& device, const Surface& surface, const SwapChainOptions& options);
-		void createDepthResources(const Instance& instance, const Device& device, const Surface& surface, const SwapChainOptions& options);
-		void createSyncObjects(const Instance& instance, const Device& device, const Surface& surface, const SwapChainOptions& options);
+		void createSwapChain(const Device& device, const Surface& surface);
+		void createImageViews(const Device& device, const Surface& surface);
+		void createColorResources(const Device& device, const Surface& surface);
+		void createDepthResources(const Device& device, const Surface& surface);
+		void createSyncObjects(const Device& device, const Surface& surface);
 
 		VkSwapchainKHR _swapchain{ VK_NULL_HANDLE };
 		
@@ -73,6 +86,9 @@ namespace vkl
 		uint32_t _graphicsFamilyQueueIndex{ 0 };
 		uint32_t _presentFamilyQueueIndex{ 0 };
 
-		size_t _frame{ 0 };
+		size_t _imageIndex{ 0 };
+		size_t _frameClamp{ 0 };
+
+		SwapChainOptions _options;
 	};
 }

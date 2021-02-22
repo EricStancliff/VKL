@@ -3,7 +3,7 @@
 
 namespace vkl
 {
-	class TextureBuffer
+	class VKL_EXPORT TextureBuffer
 	{
 		//TODO
 	};

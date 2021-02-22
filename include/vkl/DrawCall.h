@@ -3,7 +3,7 @@
 #include <memory>
 namespace vkl
 {
-	class DrawCall
+	class VKL_EXPORT DrawCall
 	{
 	public:
 		DrawCall() = default;

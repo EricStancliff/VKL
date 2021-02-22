@@ -123,7 +123,7 @@ namespace vkl
 
 		VkImageView imageView;
 		if (vkCreateImageView(device.handle(), &viewInfo, nullptr, &imageView) != VK_SUCCESS) {
-			//TODO - LOG
+			throw std::runtime_error("Error");
 		}
 
 		return imageView;
@@ -146,7 +146,7 @@ namespace vkl
 		imageInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 
 		if (vkCreateImage(device.handle(), &imageInfo, nullptr, &image) != VK_SUCCESS) {
-			//TODO - LOG
+			throw std::runtime_error("Error");
 		}
 
 		VmaAllocationCreateInfo allocInfo{};

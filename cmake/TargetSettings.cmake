@@ -1,6 +1,18 @@
 
 function(Configure_Test Target)
+
+if(WIN32)
 set_target_properties(${Target} PROPERTIES VS_DEBUGGER_WORKING_DIRECTORY "$<TARGET_FILE_DIR:${Target}>")
+
+get_property(DEBUGGING_PATHS GLOBAL PROPERTY DEBUGGING_PATHS)
+get_property(DEBUGGER_ENV GLOBAL PROPERTY DEBUGGER_ENV)
+
+set(VS_DEBUGGER_ENV "PATH=${DEBUGGING_PATHS}\n")
+set(VS_DEBUGGER_ENV "${VS_DEBUGGER_ENV}${DEBUGGER_ENV}")
+message(STATUS ${VS_DEBUGGER_ENV})
+
+set_target_properties(${Target} PROPERTIES VS_DEBUGGER_ENVIRONMENT "${VS_DEBUGGER_ENV}")
+endif()
 
 if(WIN32)
 set_target_properties( ${Target}

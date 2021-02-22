@@ -21,9 +21,24 @@ find_package(Vulkan REQUIRED)
 
 InitVcpkg()
 
+InstallExternal(glm)
 InstallExternal(glfw3)
 InstallExternal_Ext(vulkan-memory-allocator unofficial-vulkan-memory-allocator)
 #InstallExternal_Ext(shaderc glslang)
+
+get_property(VCPKG_TARGET_TRIPLET GLOBAL PROPERTY VCPKG_TARGET_TRIPLET)
+set(EXTERNAL_DIR ${CMAKE_SOURCE_DIR}/external/${VCPKG_TARGET_TRIPLET})
+
+set(DEBUGGING_PATHS "%PATH%")
+set(DEBUGGING_PATHS "${DEBUGGING_PATHS};${EXTERNAL_DIR}/bin")
+set_property(GLOBAL PROPERTY DEBUGGING_PATHS ${DEBUGGING_PATHS})
+
+get_filename_component(VULKAN_LIB_DIR ${Vulkan_LIBRARY} DIRECTORY)
+set(VULKAN_LAYERS_PATH "${VULKAN_LIB_DIR}/../Bin")
+get_filename_component(VULKAN_LAYERS_PATH_ABS ${VULKAN_LAYERS_PATH} ABSOLUTE)
+
+set(DEBUGGER_ENV "VK_LAYER_PATH=${VULKAN_LAYERS_PATH_ABS}")
+set_property(GLOBAL PROPERTY DEBUGGER_ENV ${DEBUGGER_ENV})
 
 #add projects
 add_subdirectory(src)

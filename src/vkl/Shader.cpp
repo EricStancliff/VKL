@@ -60,7 +60,7 @@ namespace vkl
         createInfo.codeSize = shader->dataSize();
         createInfo.pCode = reinterpret_cast<const uint32_t*>(shader->data());
         if (vkCreateShaderModule(device.handle(), &createInfo, nullptr, &_shaderModule) != VK_SUCCESS) {
-            //TODO - LOG
+            throw std::runtime_error("Error");
         }
 
 	}
@@ -84,7 +84,7 @@ namespace vkl
         std::ifstream file(_fileName, std::ios::ate | std::ios::binary);
 
         if (!file.is_open()) {
-            //TODO - LOG
+            throw std::runtime_error("Error");
             return;
         }
 
@@ -128,7 +128,7 @@ namespace vkl
         auto result = shaderc_compile_into_spv(compiler, data, size, shaderKind(_stage), _fileName.c_str(), "main", options);
 
         if (shaderc_result_get_compilation_status(result) != shaderc_compilation_status_success) {
-            //TODO - LOG
+            throw std::runtime_error("Error");
             return;
         }
 
@@ -159,7 +159,7 @@ namespace vkl
         std::ifstream file(_fileName, std::ios::ate | std::ios::binary);
 
         if (!file.is_open()) {
-            //TODO - LOG
+            throw std::runtime_error("Error");
             return;
         }
 

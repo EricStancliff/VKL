@@ -7,7 +7,7 @@
 
 namespace vkl
 {
-	RenderPass::RenderPass(const Device& device, const SwapChain& swapChain, const RenderPassOptions& options)
+	RenderPass::RenderPass(const Device& device, const SwapChain& swapChain, const RenderPassOptions& options) : _options(options)
 	{
         VkAttachmentDescription colorAttachment{};
         colorAttachment.format = swapChain.imageFormat();
@@ -77,7 +77,7 @@ namespace vkl
         renderPassInfo.pDependencies = &dependency;
 
         if (vkCreateRenderPass(device.handle(), &renderPassInfo, nullptr, &_renderPass) != VK_SUCCESS) {
-            //TODO - LOG
+            throw std::runtime_error("Error");
         }
 
 	}

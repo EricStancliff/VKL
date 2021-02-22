@@ -214,7 +214,7 @@ namespace vkl
 	/*****************************************************************************************************************/
 
 
-	Pipeline::Pipeline(const Device& device, const SwapChain& swapChain, const PipelineDescription& description, const RenderPass& renderPass)
+	Pipeline::Pipeline(const Device& device, const SwapChain& swapChain, const PipelineDescription& description, const RenderPass& renderPass, size_t typeIndex) : _type(typeIndex)
 	{
 		createDescriptorSetLayout(device, swapChain, description, renderPass);
 		createPipeline(device, swapChain, description, renderPass);
@@ -236,7 +236,7 @@ namespace vkl
 		poolInfo.maxSets = static_cast<uint32_t>(swapChain.framesInFlight());
 
 		if (vkCreateDescriptorPool(device.handle(), &poolInfo, nullptr, &_descriptorPool) != VK_SUCCESS) {
-			//TODO - LOG
+			throw std::runtime_error("Error");
 		}
 
 		//Descriptor Set Layout
@@ -268,7 +268,7 @@ namespace vkl
 		layoutInfo.pBindings = layoutBindings.data();
 
 		if (vkCreateDescriptorSetLayout(device.handle(), &layoutInfo, nullptr, &_descriptorSetLayout) != VK_SUCCESS) {
-			//TODO - LOG
+			throw std::runtime_error("Error");
 		}
 
 	}
@@ -380,6 +380,21 @@ namespace vkl
 		dynamicStates.push_back(VK_DYNAMIC_STATE_VIEWPORT);
 		dynamicStates.push_back(VK_DYNAMIC_STATE_SCISSOR);
 
+		VkViewport viewport{};
+		viewport.x = 0.0f;
+		viewport.y = 0.0f;
+		viewport.minDepth = 0.0f;
+		viewport.maxDepth = 1.0f;
+
+		VkRect2D scissor{};
+		scissor.offset = { 0, 0 };
+
+		VkPipelineViewportStateCreateInfo viewportState{};
+		viewportState.sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO;
+		viewportState.viewportCount = 1;
+		//viewportState.pViewports = &viewport;
+		viewportState.scissorCount = 1;
+		//viewportState.pScissors = &scissor;
 
 		VkPipelineDynamicStateCreateInfo dynamicState{};
 		dynamicState.sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO;
@@ -392,7 +407,7 @@ namespace vkl
 		pipelineLayoutInfo.pSetLayouts = &_descriptorSetLayout;
 
 		if (vkCreatePipelineLayout(device.handle(), &pipelineLayoutInfo, nullptr, &_pipelineLayout) != VK_SUCCESS) {
-			//TODO - LOG
+			throw std::runtime_error("Error");
 		}
 
 		VkGraphicsPipelineCreateInfo pipelineInfo{};
@@ -410,9 +425,10 @@ namespace vkl
 		pipelineInfo.renderPass = renderPass.handle();
 		pipelineInfo.subpass = 0;
 		pipelineInfo.basePipelineHandle = VK_NULL_HANDLE;
+		pipelineInfo.pViewportState = &viewportState;
 
 		if (vkCreateGraphicsPipelines(device.handle(), VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &_pipeline) != VK_SUCCESS) {
-			//TODO - LOG
+			throw std::runtime_error("Error");
 		}
 
 		for (auto&& shaderMod : shaderModules)
@@ -452,6 +468,9 @@ namespace vkl
 			if (!roDesc)
 				return;
 
+			if (roDesc->isAbstract())
+				return;
+
 			const PipelineDescription& pipelineDesc = roDesc->pipelineDescription();
 			size_t typeIndex = data.index;
 
@@ -459,7 +478,7 @@ namespace vkl
 				return pipePair.type() < index;
 				});
 
-			Pipeline pipeline(device, swapChain, pipelineDesc, renderPass);
+			Pipeline pipeline(device, swapChain, pipelineDesc, renderPass, typeIndex);
 			_pipelines.emplace_back(std::move(pipeline));
 
 		});

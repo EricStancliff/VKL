@@ -7,7 +7,7 @@ namespace reflect
 
 	class VKL_EXPORT object : public NullType
 	{
-		REFLECTED_TYPE(object, NullType)
+		REFLECTED_TYPE_CUSTOM(object, NullType, reflection_data_base)
 
 	public:
 		static void populateReflection(reflection_data& reflection) {}
@@ -18,6 +18,8 @@ namespace reflect
 	const reflect::reflection& reflect() {
 		return reflect::typeDictionary().getType<T>();
 	}
+
+	VKL_EXPORT const reflect::reflection& reflect(const object* obj);
 
 	template <typename T>
 	const typename T::reflection_data& reflectionInfo() {

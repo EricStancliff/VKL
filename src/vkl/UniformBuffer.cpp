@@ -54,6 +54,7 @@ namespace vkl
             VmaAllocationCreateInfo createAllocation{};
             createAllocation.usage = VMA_MEMORY_USAGE_CPU_TO_GPU;
             createAllocation.requiredFlags = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
+            createAllocation.flags = VMA_ALLOCATION_CREATE_MAPPED_BIT;
 
             VmaAllocationInfo info{};
             vmaCreateBuffer(device.allocatorHandle(), &bufferInfo, &createAllocation, &current._buffer, &current._memory, &info);

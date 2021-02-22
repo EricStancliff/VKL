@@ -3,6 +3,11 @@
 
 namespace reflect
 {
+	std::unordered_map<std::type_index, size_t>& typed_indexer()
+	{
+		static std::unordered_map<std::type_index, size_t> typedIndexer;
+		return typedIndexer;
+	}
 	bool NullType::reflection_initialized()
 	{
 		return true;
@@ -15,6 +20,11 @@ namespace reflect
 
 	const type_dictionary& typeDictionary() {
 		return _types_unsafe();
+	}
+
+	const reflect::reflection& reflect(const object* obj)
+	{
+		return obj->reflect();
 	}
 
 

@@ -42,7 +42,7 @@ namespace vkl
         createLogicalDevice(instance, surface);
 
         VmaAllocatorCreateInfo allocatorInfo = {};
-        allocatorInfo.vulkanApiVersion = VKL_VULKAN_VERSION;
+        allocatorInfo.vulkanApiVersion = VK_API_VERSION_1_0;
         allocatorInfo.physicalDevice = _physicalDevice;
         allocatorInfo.device = _device;
         allocatorInfo.instance = instance.handle();
@@ -87,7 +87,7 @@ namespace vkl
         vkEnumeratePhysicalDevices(instance.handle(), &deviceCount, nullptr);
 
         if (deviceCount == 0) {
-            //TODO - LOG
+            throw std::runtime_error("Error");
         }
 
         std::vector<VkPhysicalDevice> devices(deviceCount);
@@ -102,7 +102,7 @@ namespace vkl
 
 
         if (_physicalDevice == VK_NULL_HANDLE) {
-            //TODO - LOG
+            throw std::runtime_error("Error");
         }
 
         _maxUsableSamples = getMaxUsableSampleCount(_physicalDevice);
@@ -148,7 +148,7 @@ namespace vkl
         }
 
         if (vkCreateDevice(_physicalDevice, &createInfo, nullptr, &_device) != VK_SUCCESS) {
-            //TODO - LOG
+            throw std::runtime_error("Error");
         }
 
         vkGetDeviceQueue(_device, indices.graphicsFamily.value(), 0, &_graphicsQueue);

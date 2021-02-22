@@ -3,7 +3,7 @@
 
 namespace vkl
 {
-	class UniformBuffer
+	class VKL_EXPORT UniformBuffer
 	{
 		public:
 			UniformBuffer() = delete;

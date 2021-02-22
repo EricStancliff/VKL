@@ -8,7 +8,8 @@
 namespace vkl
 {
     const std::vector<const char*> g_validationLayers = {
-    "VK_LAYER_KHRONOS_validation"
+    "VK_LAYER_KHRONOS_validation",
+    "VK_LAYER_LUNARG_monitor"
     };
 
 
@@ -52,7 +53,10 @@ namespace vkl
     }
 
     static VKAPI_ATTR VkBool32 VKAPI_CALL s_debugCallback(VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity, VkDebugUtilsMessageTypeFlagsEXT messageType, const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData, void* pUserData) {
-        //TODO - LOG
+        if (messageSeverity >= VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT)
+        {
+            std::cerr << "validation layer: " << pCallbackData->pMessage << std::endl;
+        }
         return VK_FALSE;
     }
 
@@ -100,7 +104,7 @@ namespace vkl
 		appInfo.applicationVersion = VKL_VULKAN_VERSION;
 		appInfo.pEngineName = VKL_ENGINE_NAME;
 		appInfo.engineVersion = VK_MAKE_VERSION(0, 0, 1);
-		appInfo.apiVersion = VKL_VULKAN_VERSION;
+		appInfo.apiVersion = VK_API_VERSION_1_0;
 
 		VkInstanceCreateInfo createInfo{};
 		createInfo.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
@@ -125,7 +129,7 @@ namespace vkl
         }
 
         if (vkCreateInstance(&createInfo, nullptr, &_instance) != VK_SUCCESS) {
-            //TODO - LOG
+            throw std::runtime_error("Error");
             return;
         }
 
@@ -135,7 +139,7 @@ namespace vkl
             populateDebugMessengerCreateInfo(createInfo);
 
             if (CreateDebugUtilsMessengerEXT(_instance, &createInfo, nullptr, &_debugMessenger) != VK_SUCCESS) {
-                //TODO - LOG
+                throw std::runtime_error("Error");
             }
         }
 

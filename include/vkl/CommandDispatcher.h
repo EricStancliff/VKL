@@ -2,25 +2,30 @@
 
 #include <Common.h>
 #include <memory>
-#include <Pipeline.h>
 
 namespace vkl
 {
 	class CommandThread;
+	class PipelineManager;
+
 	class VKL_EXPORT CommandDispatcher
 	{
 	public:
-
-		CommandDispatcher(const Device& device, const SwapChain& swapChain);
 		~CommandDispatcher();
+
+		CommandDispatcher() = delete;
+		CommandDispatcher(const Device& device, const SwapChain& swapChain);
 		CommandDispatcher(const CommandDispatcher&) = delete;
-		CommandDispatcher(CommandDispatcher&&) noexcept = default;
-		CommandDispatcher& operator=(CommandDispatcher&&) noexcept = default;
+		CommandDispatcher(CommandDispatcher&&) noexcept;
+		CommandDispatcher& operator=(CommandDispatcher&&) noexcept;
 		CommandDispatcher& operator=(const CommandDispatcher&) = delete;
 
-		void processUnsortedObjects(std::span<RenderObject> objects, const PipelineManager& pipelines, const RenderPass& pass, const SwapChain& swapChain, VkFramebuffer frameBuffer, const WindowSize& extent);
+		void processUnsortedObjects(std::span< std::shared_ptr<RenderObject>> objects, const PipelineManager& pipelines, const RenderPass& pass, const SwapChain& swapChain, VkFramebuffer frameBuffer, const VkExtent2D& extent);
+
+		VkCommandBuffer primaryCommandBuffer(size_t frame) const;
 
 	private:
+		VkCommandPool _commandPool{ VK_NULL_HANDLE };
 		std::vector<std::unique_ptr<CommandThread>> _threads;
 		std::vector<VkCommandBuffer> _primaryBuffers;
 	};

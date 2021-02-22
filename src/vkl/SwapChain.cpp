@@ -8,7 +8,7 @@
 #include <SwapChain.h>
 #include <Instance.h>
 #include <RenderPass.h>
-
+#include <CommandDispatcher.h>
 
 namespace vkl
 {
@@ -29,7 +29,7 @@ namespace vkl
             }
         }
 
-        //TODO - LOG
+        throw std::runtime_error("Error");
         return VK_PRESENT_MODE_FIFO_KHR; //fallback who's impl is required for compliance
     }
 
@@ -64,7 +64,7 @@ namespace vkl
             }
         }
 
-        //TODO - LOG
+        throw std::runtime_error("Error");
         return VK_FORMAT_UNDEFINED;
     }
 
@@ -78,34 +78,56 @@ namespace vkl
 
     /******************************************************************************************************************/
 
-
-	SwapChain::SwapChain(const Instance& instance, const Device& device, const Surface& surface, const Window& window, SwapChainOptions options)
-	{
-        options.swapChainExtent = window.getWindowSize();
-        init(instance, device, surface, options);
-	}
-
-    SwapChain::SwapChain(const Instance& instance, const Device& device, const Surface& surface, SwapChainOptions options)
+    SwapChain::SwapChain(const Device& device, const Surface& surface, SwapChainOptions options)
     {
-        init(instance, device, surface, options);
+        _options = options;
+        init(device, surface);
     }
 
-    void SwapChain::init(const Instance& instance, const Device& device, const Surface& surface, const SwapChainOptions& options)
+    void SwapChain::cleanUp(const Device& device)
     {
-        createSwapChain(instance, device, surface, options);
-        createImageViews(instance, device, surface, options);
-        createColorResources(instance, device, surface, options);
-        createDepthResources(instance, device, surface, options);
-        createSyncObjects(instance, device, surface, options);
+        vkDeviceWaitIdle(device.handle());
+        vkDestroyImageView(device.handle(), _depthImageView, nullptr);
+        vmaDestroyImage(device.allocatorHandle(), _depthImage, _depthImageMemory);
+
+        vkDestroyImageView(device.handle(), _colorImageView, nullptr);
+        vmaDestroyImage(device.allocatorHandle(), _colorImage, _colorImageMemory);
+
+        for (auto framebuffer : _swapChainFramebuffers) {
+            vkDestroyFramebuffer(device.handle(), framebuffer, nullptr);
+        }
+
+        for (auto imageView : _swapChainImageViews) {
+            vkDestroyImageView(device.handle(), imageView, nullptr);
+        }
+
+        vkDestroySwapchainKHR(device.handle(), _swapchain, nullptr);
     }
 
-    void SwapChain::createSwapChain(const Instance& instance, const Device& device, const Surface& surface, const SwapChainOptions& options)
+    void SwapChain::reset(const Device& device, const Surface& surface, const CommandDispatcher& commands, const RenderPass& compatiblePass, const WindowSize& targetExtent)
+    {
+        cleanUp(device);
+        _options.swapChainExtent = targetExtent;
+        init(device, surface);
+        registerRenderPass(device, compatiblePass);
+    }
+
+    void SwapChain::init(const Device& device, const Surface& surface)
+    {
+        createSwapChain(device, surface);
+        createImageViews(device, surface);
+        createColorResources(device, surface);
+        createDepthResources(device, surface);
+        createSyncObjects(device, surface);
+    }
+
+    void SwapChain::createSwapChain(const Device& device, const Surface& surface)
     {
         SwapChainSupportDetails swapChainSupport = querySwapChainSupport(device.physicalDeviceHandle(), surface.handle());
 
-        VkSurfaceFormatKHR surfaceFormat = chooseSwapSurfaceFormat(swapChainSupport.formats, options);
-        VkPresentModeKHR presentMode = chooseSwapPresentMode(swapChainSupport.presentModes, options);
-        VkExtent2D extent = chooseSwapExtent(swapChainSupport.capabilities, options);
+        VkSurfaceFormatKHR surfaceFormat = chooseSwapSurfaceFormat(swapChainSupport.formats, _options);
+        VkPresentModeKHR presentMode = chooseSwapPresentMode(swapChainSupport.presentModes, _options);
+        VkExtent2D extent = chooseSwapExtent(swapChainSupport.capabilities, _options);
 
         uint32_t imageCount = swapChainSupport.capabilities.minImageCount + 1;
         if (swapChainSupport.capabilities.maxImageCount > 0 && imageCount > swapChainSupport.capabilities.maxImageCount) {
@@ -145,7 +167,7 @@ namespace vkl
         createInfo.clipped = VK_TRUE;
 
         if (vkCreateSwapchainKHR(device.handle(), &createInfo, nullptr, &_swapchain) != VK_SUCCESS) {
-            //TODO - LOG
+            throw std::runtime_error("Error");
         }
 
         vkGetSwapchainImagesKHR(device.handle(), _swapchain, &imageCount, nullptr);
@@ -156,7 +178,7 @@ namespace vkl
         _swapChainExtent = extent;
     }
 
-    void SwapChain::createImageViews(const Instance& instance, const Device& device, const Surface& surface, const SwapChainOptions& options)
+    void SwapChain::createImageViews(const Device& device, const Surface& surface)
     {
         _swapChainImageViews.resize(_swapChainImages.size());
 
@@ -165,7 +187,7 @@ namespace vkl
         }
     }
 
-    void SwapChain::createColorResources(const Instance& instance, const Device& device, const Surface& surface, const SwapChainOptions& options)
+    void SwapChain::createColorResources(const Device& device, const Surface& surface)
     {
         VkFormat colorFormat = _swapChainImageFormat;
 
@@ -175,7 +197,7 @@ namespace vkl
         _colorImageView = createImageView(device, _colorImage, colorFormat, VK_IMAGE_ASPECT_COLOR_BIT, 1);
     }
 
-    void SwapChain::createDepthResources(const Instance& instance, const Device& device, const Surface& surface, const SwapChainOptions& options)
+    void SwapChain::createDepthResources(const Device& device, const Surface& surface)
     {
         _swapChainDepthFormat = findDepthFormat(device.physicalDeviceHandle());
 
@@ -207,7 +229,7 @@ namespace vkl
             framebufferInfo.layers = 1;
 
             if (vkCreateFramebuffer(device.handle(), &framebufferInfo, nullptr, &_swapChainFramebuffers[i]) != VK_SUCCESS) {
-                //TODO - LOG
+                throw std::runtime_error("Error");
             }
         }
     }
@@ -239,7 +261,7 @@ namespace vkl
 
     size_t SwapChain::frame() const
     {
-        return _frame;
+        return _imageIndex;
     }
 
     VkFramebuffer SwapChain::frameBuffer(size_t frame) const
@@ -247,7 +269,88 @@ namespace vkl
         return _swapChainFramebuffers[frame];
     }
 
-    void SwapChain::createSyncObjects(const Instance& instance, const Device& device, const Surface& surface, const SwapChainOptions& options)
+    VkExtent2D SwapChain::swapChainExtent() const
+    {
+        return _swapChainExtent;
+    }
+
+    void SwapChain::prepNextFrame(const Device& device, const Surface& surface, const CommandDispatcher& commands, const RenderPass& compatiblePass, const WindowSize& targetExtent)
+    {
+        vkWaitForFences(device.handle(), 1, &_inFlightFences[_frameClamp], VK_TRUE, UINT64_MAX);
+
+        uint32_t imageIndex;
+        VkResult result = vkAcquireNextImageKHR(device.handle(), _swapchain, UINT64_MAX, _imageAvailableSemaphores[_frameClamp], VK_NULL_HANDLE, &imageIndex);
+
+        if (result == VK_ERROR_OUT_OF_DATE_KHR) {
+            reset(device, surface, commands, compatiblePass, targetExtent);
+            return;
+        }
+        else if (result != VK_SUCCESS && result != VK_SUBOPTIMAL_KHR) {
+            throw std::runtime_error("Error");
+        }
+        _imageIndex = imageIndex;
+    }
+
+    void SwapChain::swap(const Device& device, const Surface& surface, const CommandDispatcher& commands, const RenderPass& compatiblePass, const WindowSize& targetExtent)
+    {
+        bool resized = targetExtent.width != swapChainExtent().width || targetExtent.height != swapChainExtent().height;
+
+
+
+        if (_imagesInFlight[_imageIndex] != VK_NULL_HANDLE) {
+            vkWaitForFences(device.handle(), 1, &_imagesInFlight[_imageIndex], VK_TRUE, UINT64_MAX);
+        }
+        _imagesInFlight[_imageIndex] = _inFlightFences[_frameClamp];
+
+        VkSubmitInfo submitInfo{};
+        submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+
+        VkSemaphore waitSemaphores[] = { _imageAvailableSemaphores[_frameClamp] };
+        VkPipelineStageFlags waitStages[] = { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
+        submitInfo.waitSemaphoreCount = 1;
+        submitInfo.pWaitSemaphores = waitSemaphores;
+        submitInfo.pWaitDstStageMask = waitStages;
+
+        submitInfo.commandBufferCount = 1;
+        auto cmdBuffer = commands.primaryCommandBuffer(_imageIndex);
+        submitInfo.pCommandBuffers = &cmdBuffer;
+
+        VkSemaphore signalSemaphores[] = { _renderFinishedSemaphores[_frameClamp] };
+        submitInfo.signalSemaphoreCount = 1;
+        submitInfo.pSignalSemaphores = signalSemaphores;
+
+        vkResetFences(device.handle(), 1, &_inFlightFences[_frameClamp]);
+
+        if (vkQueueSubmit(device.graphicsQueueHandle(), 1, &submitInfo, _inFlightFences[_frameClamp]) != VK_SUCCESS) {
+            throw std::runtime_error("Error");
+        }
+
+        VkPresentInfoKHR presentInfo{};
+        presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
+
+        presentInfo.waitSemaphoreCount = 1;
+        presentInfo.pWaitSemaphores = signalSemaphores;
+
+        VkSwapchainKHR swapChains[] = { _swapchain };
+        presentInfo.swapchainCount = 1;
+        presentInfo.pSwapchains = swapChains;
+
+        uint32_t imageIndex = (uint32_t)_imageIndex;
+        presentInfo.pImageIndices = &imageIndex;
+
+        VkResult result = vkQueuePresentKHR(device.presentQueueHandle(), &presentInfo);
+
+        if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR || resized) {
+            reset(device, surface, commands, compatiblePass, targetExtent);
+        }
+        else if (result != VK_SUCCESS) {
+            throw std::runtime_error("Error");
+        }
+
+        _frameClamp = (_frameClamp + 1) % MAX_FRAMES_IN_FLIGHT;
+    }
+
+    void SwapChain::createSyncObjects(const Device& device, const Surface& surface)
     {
         _imageAvailableSemaphores.resize(MAX_FRAMES_IN_FLIGHT);
         _renderFinishedSemaphores.resize(MAX_FRAMES_IN_FLIGHT);
@@ -265,7 +368,7 @@ namespace vkl
             if (vkCreateSemaphore(device.handle(), &semaphoreInfo, nullptr, &_imageAvailableSemaphores[i]) != VK_SUCCESS ||
                 vkCreateSemaphore(device.handle(), &semaphoreInfo, nullptr, &_renderFinishedSemaphores[i]) != VK_SUCCESS ||
                 vkCreateFence(device.handle(), &fenceInfo, nullptr, &_inFlightFences[i]) != VK_SUCCESS) {
-                //TODO - LOG
+                throw std::runtime_error("Error");
             }
         }
     }

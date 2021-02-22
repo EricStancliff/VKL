@@ -8,12 +8,10 @@
 #include <vector>
 #include <optional>
 #include <span>
+#include <stdexcept>
 
-//TODOs
-//TODO - GLFW
-//TODO - LOG
 
-#define VKL_VULKAN_VERSION VK_MAKE_VERSION(1, 2, 0)
+#define VKL_VULKAN_VERSION VK_MAKE_VERSION(1, 0, 0)
 #define VKL_ENGINE_NAME "VKL"
 #define MAX_FRAMES_IN_FLIGHT 2
 
@@ -33,6 +31,7 @@ namespace vkl
     class DrawCall;
     class IndexBuffer;
     class RenderObject;
+    class CommandDispatcher;
 
     struct WindowSize
     {

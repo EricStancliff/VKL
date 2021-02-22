@@ -3,7 +3,7 @@
 
 namespace vkl
 {
-	class VertexBuffer
+	class VKL_EXPORT VertexBuffer
 	{
 	public:
 		VertexBuffer() = delete;

@@ -25,6 +25,9 @@ namespace vkl
 		//If you need the GLFWwindow*
 		WindowHandle handle() const;
 
+		bool shouldClose() const;
+
+		void pollEvents();
 	private:
 		friend class Surface;
 		VkSurfaceKHR createSurfaceHandle_Private(const Instance& instance) const;

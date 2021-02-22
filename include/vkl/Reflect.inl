@@ -27,10 +27,15 @@ namespace reflect
 
 	class object;
 
-	class member
+	class VKL_EXPORT member
 	{
 	public:
+		member() = default;
 		virtual ~member() = default;
+		member(const member&) = delete;
+		member(member&&) noexcept = default;
+		member& operator=(member&&) noexcept = default;
+		member& operator=(const member&) = delete;
 		virtual std::any get(object* obj) const = 0;
 		virtual void set(object* obj, const std::any& value) const = 0;
 		virtual std::string name() const = 0;
@@ -63,14 +68,19 @@ namespace reflect
 		std::string _name;
 	};
 
-	class reflection_data_base
+	class VKL_EXPORT reflection_data_base
 	{
+
 		std::vector<std::unique_ptr<member>> members;
 
 	public:
 
 		reflection_data_base() = default;
 		virtual ~reflection_data_base() = default;
+		reflection_data_base(const reflection_data_base&) = delete;
+		reflection_data_base(reflection_data_base&&) noexcept = default;
+		reflection_data_base& operator=(reflection_data_base&&) noexcept = default;
+		reflection_data_base& operator=(const reflection_data_base&) = delete;
 
 		template <auto _member>
 		void declareMember(const char* name) {
@@ -109,7 +119,7 @@ namespace reflect
 		}
 	};
 
-	class reflection
+	class VKL_EXPORT reflection
 	{
 	public:
 		reflection() = default;
@@ -122,20 +132,9 @@ namespace reflect
 
 	class type_dictionary;
 
-	template <typename T>
-	class typed_indexer
-	{
-	public:
-		typed_indexer() = default;
+	VKL_EXPORT std::unordered_map<std::type_index, size_t>& typed_indexer();
 
-	private:
-		friend class type_dictionary;
-		static size_t index;
-	};
-	template <typename T>
-	size_t typed_indexer<T>::index = 0;
-
-	class type_dictionary
+	class VKL_EXPORT type_dictionary
 	{
 	public:
 		type_dictionary() {
@@ -147,7 +146,7 @@ namespace reflect
 
 			//index
 			size_t index = _types.size();
-			typed_indexer<T>::index = index;
+			typed_indexer()[typeid(T)] = index;
 
 			//establish type
 			_types.push_back({});
@@ -160,7 +159,7 @@ namespace reflect
 			T::populateReflection(*static_cast<typename T::reflection_data*>(info.data));
 
 			//child/parent
-			size_t parentIndex = typed_indexer<typename T::reflection_parent>::index;
+			size_t parentIndex = typed_indexer()[typeid(typename T::reflection_parent)];
 			if (parentIndex != index)
 			{
 				info.parent = parentIndex;
@@ -173,13 +172,13 @@ namespace reflect
 		template <typename T>
 		const reflection& getType() const
 		{
-			return _types[typed_indexer<T>::index];
+			return _types[typed_indexer()[typeid(T)]];
 		}
 
 		template <typename T>
 		size_t indexOf() const
 		{
-			return typed_indexer<T>::index;
+			return typed_indexer()[typeid(T)];
 		}
 
 		void forAllTypesDerivedFrom(size_t index, const std::function<void(const reflection&)>& f) const;
@@ -188,7 +187,7 @@ namespace reflect
 		std::vector<reflection> _types;
 	};
 
-	type_dictionary& _types_unsafe();
+	VKL_EXPORT type_dictionary& _types_unsafe();
 
 
 	class VKL_EXPORT NullType
@@ -223,7 +222,7 @@ static bool reflection_initialized();\
 static bool _reflection_initialized;
 
 #define REFLECTED_TYPE(type, parent)\
-REFLECTED_TYPE_CUSTOM(type, parent, reflect::reflection_data_base)
+REFLECTED_TYPE_CUSTOM(type, parent, parent::reflection_data)
 
 #define IMPL_REFLECTION(type)\
 bool type::reflection_initialized(){\

@@ -3,7 +3,7 @@
 
 namespace vkl
 {
-	class IndexBuffer
+	class VKL_EXPORT IndexBuffer
 	{
 	public:
 		IndexBuffer() = delete;

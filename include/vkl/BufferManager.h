@@ -3,7 +3,7 @@
 #include <memory>
 namespace vkl
 {
-	class BufferManager
+	class VKL_EXPORT BufferManager
 	{
 	public:
 		BufferManager(const Device& device, const SwapChain& swapChain);

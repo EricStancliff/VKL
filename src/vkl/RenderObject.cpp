@@ -13,36 +13,15 @@ namespace vkl
 {
 	void RenderObject::populateReflection(RenderObjectDescription& reflection)
 	{
+		reflection.setAbstract(true);
 	}
 
 
-	RenderObject::RenderObject(const Device& device, const SwapChain& swapChain, const BufferManager& bufferManager, const PipelineManager& pipelines)
+	RenderObject::RenderObject(const Device& device, const SwapChain& swapChain, BufferManager& bufferManager, const PipelineManager& pipelines)
 	{
-		auto pipeline = pipelines.pipelineForType(this->reflect().index);
-		if (!pipeline)
-		{
-			//TODO - LOG
-			return;
-		}
-
-		_descriptorSets.resize(swapChain.framesInFlight());
-		std::vector<VkDescriptorSetLayout> layouts(swapChain.framesInFlight(), pipeline->descriptorSetLayoutHandle());
-
-		VkDescriptorSetAllocateInfo allocInfo{};
-		allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
-		allocInfo.descriptorPool = pipeline->descriptorPoolHandle();
-		allocInfo.descriptorSetCount = static_cast<uint32_t>(swapChain.framesInFlight());
-		allocInfo.pSetLayouts = layouts.data();
-
-		if (vkAllocateDescriptorSets(device.handle(), &allocInfo, _descriptorSets.data()) != VK_SUCCESS) {
-			//TODO - LOG
-		}
-
-
-		
 	}
 
-	void RenderObject::recordCommands(const SwapChain& swapChain, const PipelineManager& pipelines, VkCommandBuffer buffer)
+	void RenderObject::recordCommands(const SwapChain& swapChain, const PipelineManager& pipelines, VkCommandBuffer buffer, const VkExtent2D& extent)
 	{
 		const Pipeline* pipeline = pipelines.pipelineForType(this->reflect().index);
 		if (!pipeline)
@@ -58,13 +37,22 @@ namespace vkl
 			offsets.push_back(0);
 		}
 
-		vkCmdBindVertexBuffers(buffer, 0, (uint32_t)vbos.size(), vbos.data(), offsets.data());
-
+		if(!vbos.empty())
+			vkCmdBindVertexBuffers(buffer, 0, (uint32_t)vbos.size(), vbos.data(), offsets.data());
 
 		vkCmdBindDescriptorSets(buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline->pipelineLayoutHandle(), 0, 1, &_descriptorSets[swapChain.frame()], 0, nullptr);
 
 		for (auto&& dc : _drawCalls)
 		{
+			//TODO - let draw calls scissor
+
+			VkRect2D scissor{};
+
+			scissor.offset = { 0, 0 };
+			scissor.extent = extent;
+
+			vkCmdSetScissor(buffer, 0, 1, &scissor);
+
 			if (dc->indexBuffer())
 			{
 				vkCmdBindIndexBuffer(buffer, dc->indexBuffer()->handle(swapChain.frame()), 0, VK_INDEX_TYPE_UINT32);
@@ -86,6 +74,9 @@ namespace vkl
 	void RenderObject::addVBO(const Device& device, const SwapChain& swapChain, std::shared_ptr<VertexBuffer> vbo, uint32_t binding)
 	{
 		_vbos.push_back({ binding, vbo });
+		std::sort(_vbos.begin(), _vbos.end(), [](const auto& lhs, const auto& rhs) {
+			return lhs.first < rhs.first;
+			});
 	}
 	void RenderObject::addUniform(const Device& device, const SwapChain& swapChain, std::shared_ptr<UniformBuffer> uniform, uint32_t binding)
 	{
@@ -109,15 +100,46 @@ namespace vkl
 		}
 		
 		_uniforms.push_back({ binding, uniform });
+		std::sort(_uniforms.begin(), _uniforms.end(), [](const auto& lhs, const auto& rhs) {
+			return lhs.first < rhs.first;
+			});
+
 	}
 	void RenderObject::addTexture(const Device& device, const SwapChain& swapChain, std::shared_ptr<TextureBuffer> texture, uint32_t binding)
 	{
 		//TODO
 		_textures.push_back({ binding, texture });
+		std::sort(_textures.begin(), _textures.end(), [](const auto& lhs, const auto& rhs) {
+			return lhs.first < rhs.first;
+			});
+
 	}
 	void RenderObject::addDrawCall(const Device& device, const SwapChain& swapChain, std::shared_ptr<DrawCall> draw)
 	{
 		_drawCalls.push_back(draw);
+	}
+	void RenderObject::init(const Device& device, const SwapChain& swapChain, BufferManager& bufferManager, const PipelineManager& pipelines)
+	{
+		auto pipeline = pipelines.pipelineForType(reflect::reflect(this).index);
+		if (!pipeline)
+		{
+			throw std::runtime_error("Error");
+			return;
+		}
+
+		_descriptorSets.resize(swapChain.framesInFlight());
+		std::vector<VkDescriptorSetLayout> layouts(swapChain.framesInFlight(), pipeline->descriptorSetLayoutHandle());
+
+		VkDescriptorSetAllocateInfo allocInfo{};
+		allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
+		allocInfo.descriptorPool = pipeline->descriptorPoolHandle();
+		allocInfo.descriptorSetCount = static_cast<uint32_t>(swapChain.framesInFlight());
+		allocInfo.pSetLayouts = layouts.data();
+
+		if (vkAllocateDescriptorSets(device.handle(), &allocInfo, _descriptorSets.data()) != VK_SUCCESS) {
+			throw std::runtime_error("Error");
+		}
+
 	}
 }
 

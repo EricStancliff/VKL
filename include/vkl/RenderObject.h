@@ -7,7 +7,7 @@ namespace vkl
 {
 	class BufferManager;
 
-	class RenderObjectDescription : public reflect::reflection_data_base
+	class VKL_EXPORT RenderObjectDescription : public reflect::reflection_data_base
 	{
 	public:
 		PipelineDescription& pipelineDescription() {
@@ -16,20 +16,29 @@ namespace vkl
 		const PipelineDescription& pipelineDescription() const {
 			return _pipeline;
 		}
+
+		void setAbstract(bool a)
+		{
+			_abstract = a;
+		}
+		bool isAbstract() const
+		{
+			return _abstract;
+		}
 	private:
 		PipelineDescription _pipeline;
-
+		bool _abstract{ false };
 	};
 
-	class RenderObject : public reflect::object
+	class VKL_EXPORT RenderObject : public reflect::object
 	{
 		REFLECTED_TYPE_CUSTOM(RenderObject, reflect::object, RenderObjectDescription)
 		static void populateReflection(RenderObjectDescription& reflection);
 	public:
 		RenderObject() = delete;
-		RenderObject(const Device& device, const SwapChain& swapChain, const BufferManager& bufferManager, const PipelineManager& pipelines);
+		RenderObject(const Device& device, const SwapChain& swapChain, BufferManager& bufferManager, const PipelineManager& pipelines);
 
-		virtual void recordCommands(const SwapChain& swapChain, const PipelineManager& pipelines, VkCommandBuffer buffer);
+		virtual void recordCommands(const SwapChain& swapChain, const PipelineManager& pipelines, VkCommandBuffer buffer, const VkExtent2D& extent);
 
 		const PipelineDescription& pipelineDescription() const;
 	protected:
@@ -38,6 +47,7 @@ namespace vkl
 		void addTexture(const Device& device, const SwapChain& swapChain, std::shared_ptr<TextureBuffer>texture, uint32_t binding);
 		void addDrawCall(const Device& device, const SwapChain& swapChain, std::shared_ptr<DrawCall> draw);
 
+		void init(const Device& device, const SwapChain& swapChain, BufferManager& bufferManager, const PipelineManager& pipelines);
 	private:
 		std::vector<std::pair<uint32_t, std::shared_ptr<VertexBuffer>>> _vbos;
 		std::vector<std::pair<uint32_t, std::shared_ptr<UniformBuffer>>> _uniforms;

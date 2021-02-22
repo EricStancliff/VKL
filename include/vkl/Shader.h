@@ -8,7 +8,7 @@
 namespace vkl
 {
 
-	class ShaderData
+	class VKL_EXPORT ShaderData
 	{
 	public:
 		ShaderData() = default;
@@ -23,7 +23,7 @@ namespace vkl
 	};
 	/******************************************************************************************/
 
-	class GLSLShader : public ShaderData
+	class VKL_EXPORT GLSLShader : public ShaderData
 	{
 	public:
 		GLSLShader() = delete;
@@ -50,7 +50,7 @@ namespace vkl
 	};
 	/******************************************************************************************/
 
-	class SPVShader : public ShaderData
+	class VKL_EXPORT SPVShader : public ShaderData
 	{
 	public:
 		SPVShader() = delete;
@@ -74,7 +74,7 @@ namespace vkl
 	/******************************************************************************************/
 
 
-	class ShaderModule
+	class VKL_EXPORT ShaderModule
 	{
 	public:
 		ShaderModule() = delete;

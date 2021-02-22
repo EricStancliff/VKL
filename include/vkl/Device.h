@@ -9,7 +9,7 @@ namespace vkl
 	public:
 		Device() = delete;
 		Device(const Instance& instance, const Surface& surface);
-		~Device() = delete;
+		~Device() = default;
 
 		VkDevice handle() const;
 		VkPhysicalDevice physicalDeviceHandle() const;

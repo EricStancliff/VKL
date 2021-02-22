@@ -61,11 +61,21 @@ namespace vkl
 		return (void*)_windowData->window;
 	}
 
+	bool Window::shouldClose() const
+	{
+		return glfwWindowShouldClose(_windowData->window);
+	}
+
+	void Window::pollEvents()
+	{
+		glfwPollEvents();
+	}
+
 	VkSurfaceKHR Window::createSurfaceHandle_Private(const Instance& instance) const
 	{
 		VkSurfaceKHR surface;
 		if (glfwCreateWindowSurface(instance.handle(), _windowData->window, nullptr, &surface) != VK_SUCCESS) {
-			//TODO - LOG
+			throw std::runtime_error("Error");
 		}
 		return surface;
 	}

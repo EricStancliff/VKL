@@ -8,7 +8,7 @@ namespace vkl
 {
 	class ShaderData;
 
-	class PipelineDescription
+	class VKL_EXPORT PipelineDescription
 	{
 	public:
 
@@ -79,13 +79,16 @@ namespace vkl
 	};
 	/*****************************************************************************************************************/
 
-	class Pipeline
+	class VKL_EXPORT Pipeline
 	{
 	public:
 		Pipeline() = delete;
-		Pipeline(const Device& device, const SwapChain& swapChain, const PipelineDescription& description, const RenderPass& renderPass);
+		Pipeline(const Device& device, const SwapChain& swapChain, const PipelineDescription& description, const RenderPass& renderPass, size_t typeIndex);
 		Pipeline(const Pipeline&) = delete;
 		Pipeline(Pipeline&&) noexcept = default;
+		Pipeline& operator=(Pipeline&&) noexcept = default;
+		Pipeline& operator=(const Pipeline&) = delete;
+
 
 		VkPipeline handle() const;
 		VkDescriptorSetLayout descriptorSetLayoutHandle() const;
@@ -106,10 +109,16 @@ namespace vkl
 	};
 	/*****************************************************************************************************************/
 
-	class PipelineManager
+	class VKL_EXPORT PipelineManager
 	{
 	public:
 		PipelineManager() = delete;
+		~PipelineManager() = default;
+		PipelineManager(const PipelineManager&) = delete;
+		PipelineManager(PipelineManager&&) noexcept = default;
+		PipelineManager& operator=(PipelineManager&&) noexcept = default;
+		PipelineManager& operator=(const PipelineManager&) = delete;
+
 		PipelineManager(const Device& device, const SwapChain& swapChain, const RenderPass& renderPass);
 
 		const Pipeline* pipelineForType(size_t type) const;
