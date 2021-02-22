@@ -40,7 +40,7 @@ namespace vkl
 		{
 		public:
 			TypedUniform() = delete;
-			TypedUniform(const Device& device, uint32_t binding) : UniformBuffer(device, binding) {}
+			TypedUniform(const Device& device, const SwapChain& swapChain) : UniformBuffer(device, swapChain) {}
 
 			void setData(const T& data)
 			{

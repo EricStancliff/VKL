@@ -43,7 +43,7 @@ namespace vkl
 	{
 	public:
 		TypedVBO() = delete;
-		TypedVBO(const Device& device, uint32_t binding) : VertexBuffer(device, binding) {}
+		TypedVBO(const Device& device, const SwapChain& swapChain) : VertexBuffer(device, swapChain) {}
 
 		void setData(std::span<const T> data)
 		{

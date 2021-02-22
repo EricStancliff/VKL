@@ -385,16 +385,19 @@ namespace vkl
 		viewport.y = 0.0f;
 		viewport.minDepth = 0.0f;
 		viewport.maxDepth = 1.0f;
+		viewport.width = (float)swapChain.swapChainExtent().width;
+		viewport.height = (float)swapChain.swapChainExtent().height;
 
 		VkRect2D scissor{};
 		scissor.offset = { 0, 0 };
+		scissor.extent = swapChain.swapChainExtent();
 
 		VkPipelineViewportStateCreateInfo viewportState{};
 		viewportState.sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO;
 		viewportState.viewportCount = 1;
-		//viewportState.pViewports = &viewport;
+		viewportState.pViewports = &viewport;
 		viewportState.scissorCount = 1;
-		//viewportState.pScissors = &scissor;
+		viewportState.pScissors = &scissor;
 
 		VkPipelineDynamicStateCreateInfo dynamicState{};
 		dynamicState.sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO;
