@@ -3,13 +3,13 @@
 
 namespace vkl
 {
-	class VertexBuffer
+	class IndexBuffer
 	{
 	public:
-		VertexBuffer() = delete;
-		VertexBuffer(const Device& device, const SwapChain& swapChain);
+		IndexBuffer() = delete;
+		IndexBuffer(const Device& device, const SwapChain& swapChain);
 
-		void setData(void* data, size_t elementSize, size_t count);
+		void setData(std::span<const uint32_t> indices);
 		void update(const Device& device, const SwapChain& swapChain);
 
 		void* data() const;
@@ -34,21 +34,8 @@ namespace vkl
 		};
 
 		std::vector<BufferInfo> _buffers;
-		
+
 		int _dirty{ -1 };
-	};
-
-	template <typename T>
-	class TypedVBO : public VertexBuffer
-	{
-	public:
-		TypedVBO() = delete;
-		TypedVBO(const Device& device, uint32_t binding) : VertexBuffer(device, binding) {}
-
-		void setData(std::span<const T> data)
-		{
-			setData(data.data(), sizeof(T), data.size());
-		}
 
 	};
 }

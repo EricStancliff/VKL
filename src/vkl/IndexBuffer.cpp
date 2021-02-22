@@ -1,23 +1,25 @@
-#include <UniformBuffer.h>
-
+#include <IndexBuffer.h>
 #include <Device.h>
 #include <SwapChain.h>
 
 namespace vkl
 {
-    UniformBuffer::UniformBuffer(const Device& device, const SwapChain& swapChain)
+
+    IndexBuffer::IndexBuffer(const Device& device, const SwapChain& swapChain)
     {
         _buffers.resize(swapChain.framesInFlight());
     }
 
-    void UniformBuffer::setData(void* data, size_t size)
+    void IndexBuffer::setData(std::span<const uint32_t> indices)
     {
-        _data = data;
-        _size = size;
+        _data = (void*)indices.data();
+        _elementSize = sizeof(uint32_t);
+        _oldCount = _count;
+        _count = indices.size();
         _dirty = std::numeric_limits<int>::max();
     }
 
-    void UniformBuffer::update(const Device& device, const SwapChain& swapChain)
+    void IndexBuffer::update(const Device& device, const SwapChain& swapChain)
     {
         if (_dirty == swapChain.frame())
             _dirty = -1;
@@ -30,7 +32,7 @@ namespace vkl
 
         auto& current = _buffers[swapChain.frame()];
 
-        if (isValid(swapChain.frame()))
+        if (_oldCount != _count && isValid(swapChain.frame()))
         {
             //destroy buffer
             if (current._buffer && current._memory)
@@ -42,13 +44,17 @@ namespace vkl
             }
         }
 
+        if (_count == 0)
+            return;
+
+
         if (!isValid(swapChain.frame()))
         {
             //create buffer
             VkBufferCreateInfo bufferInfo{};
             bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
-            bufferInfo.size = _size;
-            bufferInfo.usage = VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT;
+            bufferInfo.size = _elementSize * _count;
+            bufferInfo.usage = VK_BUFFER_USAGE_INDEX_BUFFER_BIT;
             bufferInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 
             VmaAllocationCreateInfo createAllocation{};
@@ -62,29 +68,33 @@ namespace vkl
         }
 
         //populate buffer
-        if (current._mapped && _data)
-            memcpy(current._mapped, _data, _size);
+        if (current._mapped && _data && _count)
+            memcpy(current._mapped, _data, _elementSize * _count);
 
     }
 
-    void* UniformBuffer::data() const
+    void* IndexBuffer::data() const
     {
         return _data;
     }
 
-    size_t UniformBuffer::size() const
+    size_t IndexBuffer::elementSize() const
     {
-        return _size;
+        return _elementSize;
     }
 
-    VkBuffer UniformBuffer::handle(size_t frameIndex) const
+    size_t IndexBuffer::count() const
+    {
+        return _count;
+    }
+
+    VkBuffer IndexBuffer::handle(size_t frameIndex) const
     {
         return _buffers[frameIndex]._buffer;
     }
 
-    bool UniformBuffer::isValid(size_t frameIndex) const
+    bool IndexBuffer::isValid(size_t frameIndex) const
     {
         return _buffers[frameIndex]._buffer != VK_NULL_HANDLE;
     }
-
 }

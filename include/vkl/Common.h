@@ -31,6 +31,7 @@ namespace vkl
     class VertexBuffer;
     class TextureBuffer;
     class DrawCall;
+    class IndexBuffer;
 
     struct WindowSize
     {

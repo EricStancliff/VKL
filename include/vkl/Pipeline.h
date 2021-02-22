@@ -3,7 +3,6 @@
 #include <Common.h>
 
 #include <filesystem>
-#include <typeindex>
 
 namespace vkl
 {
@@ -60,6 +59,7 @@ namespace vkl
 
 		void declareTexture(uint32_t binding);
 
+		void setPrimitiveTopology(VkPrimitiveTopology topology);
 
 		//for use by pipeline
 		std::span<const ShaderDescription> shaders() const;
@@ -67,6 +67,7 @@ namespace vkl
 		std::span<const UniformDescription> uniforms() const;
 		const PushConstantDescription& pushConstant() const;
 		std::span<const TextureDescription> textures() const;
+		VkPrimitiveTopology primitiveTopology() const;
 
 	private:
 		std::vector< ShaderDescription> _shaders;
@@ -74,25 +75,37 @@ namespace vkl
 		std::vector<UniformDescription> _uniforms;
 		PushConstantDescription _pushConstant;
 		std::vector<TextureDescription> _textures;
+		VkPrimitiveTopology _primitiveTopology{ VK_PRIMITIVE_TOPOLOGY_POINT_LIST };
 	};
+	/*****************************************************************************************************************/
 
 	class Pipeline
 	{
 	public:
 		Pipeline() = delete;
-		Pipeline(const Device& device, const PipelineDescription& description);
+		Pipeline(const Device& device, const PipelineDescription& description, const RenderPass& renderPass);
+		Pipeline(const Pipeline&) = delete;
+		Pipeline(Pipeline&&) noexcept = default;
 
 		VkPipeline handle() const;
+
+		size_t type() const;
 	private:
-		VkPipeline _pipeline;
+		VkPipeline _pipeline{ VK_NULL_HANDLE };
+		VkPipelineLayout _pipelineLayout{ VK_NULL_HANDLE };
+		VkDescriptorSetLayout _descriptorSetLayout{ VK_NULL_HANDLE };
+		size_t _type{ 0 };
 	};
+	/*****************************************************************************************************************/
 
 	class PipelineManager
 	{
 	public:
 		PipelineManager() = delete;
-		PipelineManager(const Device& device);
+		PipelineManager(const Device& device, const RenderPass& renderPass);
+
+		VkPipeline pipelineForType(size_t type) const;
 	private:
-		std::vector<std::pair<std::type_index, Pipeline>> _pipelines;
+		std::vector<Pipeline> _pipelines;
 	};
 }

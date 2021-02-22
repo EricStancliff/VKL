@@ -78,12 +78,12 @@ namespace vkl
 	{
 	public:
 		ShaderModule() = delete;
-		ShaderModule(const Device& device, std::shared_ptr<ShaderData> shader, VkShaderStageFlagBits shaderStage);
+		ShaderModule(const Device& device, std::shared_ptr<const ShaderData> shader, VkShaderStageFlagBits shaderStage);
 
 		VkShaderModule handle() const;
 
 	private:
-		std::shared_ptr<ShaderData> m_shaderData;
+		std::shared_ptr<const ShaderData> m_shaderData;
 		VkShaderModule _shaderModule{ VK_NULL_HANDLE };
 	};
 }

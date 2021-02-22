@@ -1,45 +1,49 @@
 
 
 set(vkl_source
-	./RenderPass.cpp
-	./SwapChain.cpp
-	./Window.cpp
+	./BufferManager.cpp
 	./CommandDispatcher.cpp
 	./Common.cpp
 	./Device.cpp
-	./Instance.cpp
-	./Reflect.cpp
-	./Surface.cpp
-	./Pipeline.cpp
-	./Shader.cpp
-	./RenderObject.cpp
- 	./VertexBuffer.cpp
-	./UniformBuffer.cpp
-	./TextureBuffer.cpp
 	./DrawCall.cpp
-)
+	./Instance.cpp
+	./IndexBuffer.cpp
+	./Pipeline.cpp
+	./Reflect.cpp
+	./RenderObject.cpp
+	./RenderPass.cpp
+	./Shader.cpp
+	./Surface.cpp
+	./SwapChain.cpp
+	./TextureBuffer.cpp
+	./UniformBuffer.cpp
+ 	./VertexBuffer.cpp
+	./Window.cpp
+	)
 
 set(vkl_include_dir ${CMAKE_SOURCE_DIR}/include/vkl)
 set(vkl_includes
-	${vkl_include_dir}/Window.h
+	${vkl_include_dir}/BufferManager.h
 	${vkl_include_dir}/CommandDispatcher.h
 	${vkl_include_dir}/Common.h
 	${vkl_include_dir}/Device.h
+	${vkl_include_dir}/DrawCall.h
+	${vkl_include_dir}/IndexBuffer.h
 	${vkl_include_dir}/Instance.h
+	${vkl_include_dir}/Pipeline.h
 	${vkl_include_dir}/Reflect.h
 	${vkl_include_dir}/Reflect.inl
+	${vkl_include_dir}/RenderObject.h
 	${vkl_include_dir}/RenderPass.h
+	${vkl_include_dir}/Shader.h
 	${vkl_include_dir}/Surface.h
 	${vkl_include_dir}/SwapChain.h
-	${vkl_include_dir}/VKL_EXPORT.h
-	${vkl_include_dir}/Pipeline.h
-	${vkl_include_dir}/Shader.h
-	${vkl_include_dir}/RenderObject.h
-	${vkl_include_dir}/VertexBuffer.h
-	${vkl_include_dir}/UniformBuffer.h
 	${vkl_include_dir}/TextureBuffer.h
-	${vkl_include_dir}/DrawCall.h
-)
+	${vkl_include_dir}/UniformBuffer.h
+	${vkl_include_dir}/VertexBuffer.h
+	${vkl_include_dir}/VKL_EXPORT.h
+	${vkl_include_dir}/Window.h
+	)
 
 add_library(vkl SHARED ${vkl_source} ${vkl_includes})
 

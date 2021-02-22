@@ -1,6 +1,10 @@
 #include <Pipeline.h>
 
 #include <Shader.h>
+#include <Reflect.h>
+#include <RenderObject.h>
+#include <Device.h>
+#include <RenderPass.h>
 
 #include <shared_mutex>
 
@@ -170,6 +174,15 @@ namespace vkl
 	{
 		_textures.push_back({ .binding = binding });
 	}
+	void PipelineDescription::setPrimitiveTopology(VkPrimitiveTopology topology)
+	{
+		_primitiveTopology = topology;
+	}
+
+	VkPrimitiveTopology PipelineDescription::primitiveTopology() const
+	{
+		return _primitiveTopology;
+	}
 
 	std::span<const PipelineDescription::ShaderDescription> PipelineDescription::shaders() const
 	{
@@ -195,10 +208,153 @@ namespace vkl
 	{
 		return _textures;
 	}
+	/*****************************************************************************************************************/
 
 
-	Pipeline::Pipeline(const Device& device, const PipelineDescription& description)
+	Pipeline::Pipeline(const Device& device, const PipelineDescription& description, const RenderPass& renderPass)
 	{
+		std::vector<VkPipelineShaderStageCreateInfo> shaderStageCreateInfos;
+		std::vector<ShaderModule> shaderModules;
+
+		for (auto&& shader : description.shaders())
+		{
+			if (!shader.shader)
+				continue;
+
+			ShaderModule shaderMod(device, shader.shader, shader.stage);
+			
+			VkPipelineShaderStageCreateInfo createInfo{};
+			createInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+			createInfo.stage = shader.stage;
+			createInfo.module = shaderMod.handle();
+			createInfo.pName = "main";
+
+			shaderModules.emplace_back(std::move(shaderMod));
+			shaderStageCreateInfos.emplace_back(std::move(createInfo));
+
+		}
+
+		VkPipelineVertexInputStateCreateInfo vertexInputInfo{};
+		vertexInputInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
+
+		std::vector< VkVertexInputBindingDescription> bindingDescriptions;
+		std::vector< VkVertexInputAttributeDescription> attributeDescriptions;
+
+		for (auto&& vbo : description.attributes())
+		{
+			auto findBinding = std::find_if(bindingDescriptions.begin(), bindingDescriptions.end(), [&](const VkVertexInputBindingDescription& rhs) {
+				return vbo.binding == rhs.binding;
+				});
+
+			if (findBinding == bindingDescriptions.end())
+			{
+				VkVertexInputBindingDescription bindingDescription{};
+				bindingDescription.binding = vbo.binding;
+				bindingDescription.stride = (uint32_t)vbo.size;
+				bindingDescription.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
+				bindingDescriptions.emplace_back(std::move(bindingDescription));
+			}
+
+			VkVertexInputAttributeDescription attributeDesc{};
+			attributeDesc.binding = vbo.binding;
+			attributeDesc.location = vbo.location;
+			attributeDesc.format = vbo.format;
+			attributeDesc.offset = (uint32_t)vbo.offset;
+			attributeDescriptions.emplace_back(std::move(attributeDesc));
+
+		}
+
+
+		vertexInputInfo.vertexBindingDescriptionCount = static_cast<uint32_t>(bindingDescriptions.size());
+		vertexInputInfo.vertexAttributeDescriptionCount = static_cast<uint32_t>(attributeDescriptions.size());
+		vertexInputInfo.pVertexBindingDescriptions = bindingDescriptions.data();
+		vertexInputInfo.pVertexAttributeDescriptions = attributeDescriptions.data();
+
+		VkPipelineInputAssemblyStateCreateInfo inputAssembly{};
+		inputAssembly.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
+		inputAssembly.topology = description.primitiveTopology();
+		inputAssembly.primitiveRestartEnable = VK_FALSE;
+
+
+		VkPipelineRasterizationStateCreateInfo rasterizer{};
+		rasterizer.sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO;
+		rasterizer.depthClampEnable = VK_FALSE;
+		rasterizer.rasterizerDiscardEnable = VK_FALSE;
+		rasterizer.polygonMode = VK_POLYGON_MODE_FILL;
+		rasterizer.lineWidth = 1.0f;
+		rasterizer.cullMode = VK_CULL_MODE_BACK_BIT;
+		rasterizer.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;
+		rasterizer.depthBiasEnable = VK_FALSE;
+
+		VkPipelineMultisampleStateCreateInfo multisampling{};
+		multisampling.sType = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO;
+		multisampling.sampleShadingEnable = VK_FALSE;
+		multisampling.rasterizationSamples = device.maxUsableSamples();
+
+		VkPipelineDepthStencilStateCreateInfo depthStencil{};
+		depthStencil.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
+		depthStencil.depthTestEnable = VK_TRUE;
+		depthStencil.depthWriteEnable = VK_TRUE;
+		depthStencil.depthCompareOp = VK_COMPARE_OP_LESS;
+		depthStencil.depthBoundsTestEnable = VK_FALSE;
+		depthStencil.stencilTestEnable = VK_FALSE;
+
+		VkPipelineColorBlendAttachmentState colorBlendAttachment{};
+		colorBlendAttachment.colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
+		colorBlendAttachment.blendEnable = VK_FALSE;
+
+		VkPipelineColorBlendStateCreateInfo colorBlending{};
+		colorBlending.sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO;
+		colorBlending.logicOpEnable = VK_FALSE;
+		colorBlending.logicOp = VK_LOGIC_OP_COPY;
+		colorBlending.attachmentCount = 1;
+		colorBlending.pAttachments = &colorBlendAttachment;
+		colorBlending.blendConstants[0] = 0.0f;
+		colorBlending.blendConstants[1] = 0.0f;
+		colorBlending.blendConstants[2] = 0.0f;
+		colorBlending.blendConstants[3] = 0.0f;
+
+		std::vector<VkDynamicState> dynamicStates;
+		dynamicStates.push_back(VK_DYNAMIC_STATE_VIEWPORT);
+		dynamicStates.push_back(VK_DYNAMIC_STATE_SCISSOR);
+		
+
+		VkPipelineDynamicStateCreateInfo dynamicState{};
+		dynamicState.sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO;
+		dynamicState.pDynamicStates = dynamicStates.data();
+		dynamicState.dynamicStateCount = static_cast<uint32_t>(dynamicStates.size());
+
+		VkPipelineLayoutCreateInfo pipelineLayoutInfo{};
+		pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
+		pipelineLayoutInfo.setLayoutCount = 1;
+		pipelineLayoutInfo.pSetLayouts = &_descriptorSetLayout;
+
+		if (vkCreatePipelineLayout(device.handle(), &pipelineLayoutInfo, nullptr, &_pipelineLayout) != VK_SUCCESS) {
+			//TODO - LOG
+		}
+
+		VkGraphicsPipelineCreateInfo pipelineInfo{};
+		pipelineInfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
+		pipelineInfo.stageCount = static_cast<uint32_t>(shaderStageCreateInfos.size());
+		pipelineInfo.pStages = shaderStageCreateInfos.data();
+		pipelineInfo.pVertexInputState = &vertexInputInfo;
+		pipelineInfo.pInputAssemblyState = &inputAssembly;
+		pipelineInfo.pRasterizationState = &rasterizer;
+		pipelineInfo.pMultisampleState = &multisampling;
+		pipelineInfo.pDepthStencilState = &depthStencil;
+		pipelineInfo.pColorBlendState = &colorBlending;
+		pipelineInfo.pDynamicState = &dynamicState;
+		pipelineInfo.layout = _pipelineLayout;
+		pipelineInfo.renderPass = renderPass.handle();
+		pipelineInfo.subpass = 0;
+		pipelineInfo.basePipelineHandle = VK_NULL_HANDLE;
+
+		if (vkCreateGraphicsPipelines(device.handle(), VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &_pipeline) != VK_SUCCESS) {
+			//TODO - LOG
+		}
+
+		for(auto&& shaderMod : shaderModules)
+			vkDestroyShaderModule(device.handle(), shaderMod.handle(), nullptr);
 
 	}
 
@@ -207,9 +363,40 @@ namespace vkl
 		return _pipeline;
 	}
 
-	PipelineManager::PipelineManager(const Device& device)
+	size_t Pipeline::type() const
 	{
+		return _type;
+	}
 
+	/*****************************************************************************************************************/
+	PipelineManager::PipelineManager(const Device& device, const RenderPass& renderPass)
+	{
+		reflect::forAllTypesDerivedFrom<RenderObject>([&](const reflect::reflection& data) {
+			const RenderObjectDescription* roDesc = dynamic_cast<const RenderObjectDescription*>(data.data);
+			if (!roDesc)
+				return;
+
+			const PipelineDescription& pipelineDesc = roDesc->pipelineDescription();
+			size_t typeIndex = data.index;
+
+			auto findWhere = std::lower_bound(_pipelines.begin(), _pipelines.end(), typeIndex, [&](const Pipeline& pipePair, const size_t& index) {
+				return pipePair.type() < index;
+				});
+
+			Pipeline pipeline(device, pipelineDesc, renderPass);
+			_pipelines.emplace_back(std::move(pipeline));
+
+		});
+
+	}
+	VkPipeline PipelineManager::pipelineForType(size_t type) const
+	{
+		auto findWhere = std::lower_bound(_pipelines.begin(), _pipelines.end(), type, [&](const Pipeline& pipePair, const size_t& index) {
+			return pipePair.type() < index;
+			});
+		if (findWhere == _pipelines.end())
+			return VK_NULL_HANDLE;
+		return findWhere->handle();
 	}
 
 }

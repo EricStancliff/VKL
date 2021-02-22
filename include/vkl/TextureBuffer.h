@@ -5,6 +5,6 @@ namespace vkl
 {
 	class TextureBuffer
 	{
-
+		//TODO
 	};
 }

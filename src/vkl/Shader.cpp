@@ -51,7 +51,7 @@ namespace vkl
     }
 
 
-	ShaderModule::ShaderModule(const Device& device, std::shared_ptr<ShaderData> shader, VkShaderStageFlagBits shaderStage)
+	ShaderModule::ShaderModule(const Device& device, std::shared_ptr<const ShaderData> shader, VkShaderStageFlagBits shaderStage)
 	{
 		m_shaderData = shader;
 

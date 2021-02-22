@@ -5,7 +5,7 @@
 
 namespace vkl
 {
-    VertexBuffer::VertexBuffer(const Device& device, const SwapChain& swapChain, uint32_t binding) : _binding(binding)
+    VertexBuffer::VertexBuffer(const Device& device, const SwapChain& swapChain)
     {
         _buffers.resize(swapChain.framesInFlight());
     }
