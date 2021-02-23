@@ -60,7 +60,7 @@ namespace vkl
 			}
 			else
 			{
-				vkCmdDraw(buffer, (uint32_t)dc->count(), 0, (uint32_t)dc->offset(), 0);
+				vkCmdDraw(buffer, (uint32_t)dc->count(), 1, (uint32_t)dc->offset(), 0);
 			}
 		}
 

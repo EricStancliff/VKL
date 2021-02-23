@@ -150,7 +150,7 @@ namespace vkl
 		}
 
 		VmaAllocationCreateInfo allocInfo{};
-		allocInfo.requiredFlags = properties;
+		allocInfo.usage = VMA_MEMORY_USAGE_GPU_ONLY;
 		vmaCreateImage(device.allocatorHandle(), &imageInfo, &allocInfo, &image, &imageMemory, nullptr);
 	}
 

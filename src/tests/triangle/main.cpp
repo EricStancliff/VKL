@@ -12,6 +12,7 @@
 #include <CommandDispatcher.h>
 #include <VertexBuffer.h>
 #include <DrawCall.h>
+#include <IndexBuffer.h>
 
 #define GLM_FORCE_RADIANS
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
@@ -23,27 +24,27 @@ constexpr const char* VertShader = R"Shader(
 
 #version 450
 
-layout(location = 0) in vec2 inPos;
+
+layout(location = 0) in vec2 inPosition;
 layout(location = 1) in vec3 inColor;
 
-layout(location = 0) out vec3 outColor;
+layout(location = 0) out vec3 fragColor;
 
 void main() {
-	outColor = inColor;
-    gl_Position = vec4(inPos, 0.0, 1.0);
+    gl_Position = vec4(inPosition, 0.0, 1.0);
+    fragColor = inColor;
 }
-
 )Shader";
 constexpr const char* FragShader = R"Shader(
 
 #version 450
 
-layout(location = 0) in vec3 inColor;
+layout(location = 0) in vec3 fragColor;
 
 layout(location = 0) out vec4 outColor;
 
 void main() {
-    outColor = vec4(inColor, 1.0);
+    outColor = vec4(fragColor, 1.0);
 }
 )Shader";
 
@@ -62,8 +63,6 @@ class Triangle : public vkl::RenderObject
 
 		reflection.pipelineDescription().addShaderGLSL(VK_SHADER_STAGE_VERTEX_BIT, VertShader);
 		reflection.pipelineDescription().addShaderGLSL(VK_SHADER_STAGE_FRAGMENT_BIT, FragShader);
-		//reflection.pipelineDescription().addShaderSPV(VK_SHADER_STAGE_VERTEX_BIT, std::filesystem::path("C:\\My_Work\\New folder (2)\\test.vert.spv"));
-		//reflection.pipelineDescription().addShaderSPV(VK_SHADER_STAGE_FRAGMENT_BIT, std::filesystem::path("C:\\My_Work\\New folder (2)\\test.frag.spv"));
 
 		reflection.pipelineDescription().declareVertexAttribute(0, 0, VK_FORMAT_R32G32_SFLOAT, sizeof(Vertex), offsetof(Vertex, pos));
 		reflection.pipelineDescription().declareVertexAttribute(0, 1, VK_FORMAT_R32G32B32_SFLOAT, sizeof(Vertex), offsetof(Vertex, color));
@@ -77,19 +76,29 @@ public:
 		auto vbo = bufferManager.createVertexBuffer(device, swapChain);
 
 		_verts.push_back({ glm::vec2(0.0, -0.5), glm::vec3(1,0,0) });
-		_verts.push_back({ glm::vec2(0.5, 0.5), glm::vec3(0,1,0) });
-		_verts.push_back({ glm::vec2(-0.5, 0.5), glm::vec3(0,0,1) });
+		_verts.push_back({ glm::vec2(-0.5, 0.5), glm::vec3(0,1,0) });
+		_verts.push_back({ glm::vec2(0.5, 0.5), glm::vec3(0,0,1) });
 
 		vbo->setData(_verts.data(), sizeof(Vertex), _verts.size());
 		addVBO(device, swapChain, vbo, 0);
 
 		auto drawCall = std::make_shared<vkl::DrawCall>();
 		drawCall->setCount(3);
+
+		_indices.push_back(0);
+		_indices.push_back(1);
+		_indices.push_back(2);
+		auto indexBuffer = bufferManager.createIndexBuffer(device, swapChain);
+		indexBuffer->setData(_indices);
+		
+		drawCall->setIndexBuffer(indexBuffer);
+
 		addDrawCall(device, swapChain, drawCall);
 	}
 
 private:
 	std::vector<Vertex> _verts;
+	std::vector<uint32_t> _indices;
 };
 
 IMPL_REFLECTION(Triangle)
