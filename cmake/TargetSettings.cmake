@@ -37,7 +37,7 @@ set_target_properties( ${Target}
 else()
 set_target_properties( ${Target}
     PROPERTIES
-    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}
+    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}"
     FOLDER "Tests"
 )
 endif()
