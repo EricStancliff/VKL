@@ -141,22 +141,22 @@ namespace vkl
 	void CommandDispatcher::processUnsortedObjects(std::span< std::shared_ptr<RenderObject>> objects, const PipelineManager& pipelines, const RenderPass& pass, const SwapChain& swapChain, VkFramebuffer frameBuffer, const VkExtent2D& extent)
 	{
 		//record commands
-		//size_t objectCount = objects.size();
-		//size_t objectsPerThread = objectCount / _threads.size() + 1;
+		size_t objectCount = objects.size();
+		size_t objectsPerThread = objectCount / _threads.size() + 1;
 
-		//size_t offset = 0;
-		//size_t threadIndex = 0;
-		//std::vector<std::future<VkCommandBuffer>> futures;
-		//std::vector<VkCommandBuffer> buffers;
+		size_t offset = 0;
+		size_t threadIndex = 0;
+		std::vector<std::future<VkCommandBuffer>> futures;
+		std::vector<VkCommandBuffer> buffers;
 
-		//while (offset < objects.size())
-		//{
-		//	futures.push_back(_threads[threadIndex]->processObjects(objects.subspan(offset, objectsPerThread), pipelines, pass, swapChain, frameBuffer, extent));
-		//	offset += objectsPerThread;
-		//	++threadIndex;
-		//}
-		//for (auto&& future : futures)
-		//	buffers.push_back(future.get());
+		while (offset < objects.size())
+		{
+			futures.push_back(_threads[threadIndex]->processObjects(objects.subspan(offset, objectsPerThread), pipelines, pass, swapChain, frameBuffer, extent));
+			offset += objectsPerThread;
+			++threadIndex;
+		}
+		for (auto&& future : futures)
+			buffers.push_back(future.get());
 
 		
 		VkCommandBufferBeginInfo beginInfo{};
@@ -181,21 +181,9 @@ namespace vkl
 		renderPassInfo.clearValueCount = static_cast<uint32_t>(clearValues.size());
 		renderPassInfo.pClearValues = clearValues.data();
 
-		vkCmdBeginRenderPass(_primaryBuffers[swapChain.frame()], &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
+		vkCmdBeginRenderPass(_primaryBuffers[swapChain.frame()], &renderPassInfo, VK_SUBPASS_CONTENTS_SECONDARY_COMMAND_BUFFERS);
 
-		//vkCmdExecuteCommands(_primaryBuffers[swapChain.frame()], (uint32_t)buffers.size(), buffers.data());
-		VkViewport viewport{};
-		viewport.height = (float)extent.height;
-		viewport.width = (float)extent.width;
-		viewport.minDepth = 0.0;
-		viewport.maxDepth = 1.0;
-		vkCmdSetViewport(_primaryBuffers[swapChain.frame()], 0, 1, &viewport);
-
-
-		for (auto&& object : objects)
-		{
-			object->recordCommands(swapChain, pipelines, _primaryBuffers[swapChain.frame()], extent);
-		}
+		vkCmdExecuteCommands(_primaryBuffers[swapChain.frame()], (uint32_t)buffers.size(), buffers.data());
 
 		vkCmdEndRenderPass(_primaryBuffers[swapChain.frame()]);
 
