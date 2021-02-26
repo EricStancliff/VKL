@@ -47,6 +47,8 @@ namespace vkl
 
 		VkExtent2D swapChainExtent() const;
 
+		VkCommandBuffer oneOffCommandBuffer(size_t frame) const;
+
 		void prepNextFrame(const Device& device, const Surface& surface, const CommandDispatcher& commands, const RenderPass& compatiblePass, const WindowSize& targetExtent);
 		void swap(const Device& device, const Surface& surface, const CommandDispatcher& commands, const RenderPass& compatiblePass, const WindowSize& targetExtent);
 
@@ -90,5 +92,9 @@ namespace vkl
 		size_t _frameClamp{ 0 };
 
 		SwapChainOptions _options;
+
+		std::vector<VkCommandBuffer> _oneOffCommandBuffers;
+		VkCommandPool _commandPool{ VK_NULL_HANDLE };
+		bool _prepped{ false };
 	};
 }

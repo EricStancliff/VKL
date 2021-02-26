@@ -107,6 +107,25 @@ namespace vkl
 	}
 	void RenderObject::addTexture(const Device& device, const SwapChain& swapChain, std::shared_ptr<TextureBuffer> texture, uint32_t binding)
 	{
+		for (int i = 0; i < swapChain.framesInFlight(); ++i)
+		{
+			VkDescriptorImageInfo imageInfo{};
+			imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+			imageInfo.imageView = texture->imageViewHandle();
+			imageInfo.sampler = texture->samplerHandle();
+
+			VkWriteDescriptorSet descriptorWrite{};
+			descriptorWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+			descriptorWrite.dstSet = _descriptorSets[i];
+			descriptorWrite.dstBinding = binding;
+			descriptorWrite.dstArrayElement = 0;
+			descriptorWrite.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+			descriptorWrite.descriptorCount = 1;
+			descriptorWrite.pImageInfo = &imageInfo;
+
+			vkUpdateDescriptorSets(device.handle(), 1, &descriptorWrite, 0, nullptr);
+		}
+
 		//TODO
 		_textures.push_back({ binding, texture });
 		std::sort(_textures.begin(), _textures.end(), [](const auto& lhs, const auto& rhs) {

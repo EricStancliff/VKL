@@ -39,10 +39,10 @@ namespace vkl
 		_vertexBuffers.emplace_back(newOne);
 		return newOne;
 	}
-	//std::shared_ptr<TextureBuffer> BufferManager::createTextureBuffer(const Device& device, const SwapChain& swapChain)
-	//{
-	//	return std::shared_ptr<TextureBuffer>(device, swapChain);
-	//}
+	std::shared_ptr<TextureBuffer> BufferManager::createTextureBuffer(const Device& device, const SwapChain& swapChain, void* imageData, size_t width, size_t height, size_t components)
+	{
+		return std::make_shared<TextureBuffer>(device, swapChain, imageData, width, height, components);
+	}
 	std::shared_ptr<UniformBuffer> BufferManager::createUniformBuffer(const Device& device, const SwapChain& swapChain)
 	{
 		auto newOne = std::make_shared<UniformBuffer>(device, swapChain);

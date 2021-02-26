@@ -19,6 +19,7 @@ set(vkl_source
 	./UniformBuffer.cpp
  	./VertexBuffer.cpp
 	./Window.cpp
+	./PNGLoader.cpp
 	)
 
 set(vkl_include_dir ${CMAKE_SOURCE_DIR}/include/vkl)
@@ -43,6 +44,7 @@ set(vkl_includes
 	${vkl_include_dir}/VertexBuffer.h
 	${vkl_include_dir}/VKL_EXPORT.h
 	${vkl_include_dir}/Window.h
+	${vkl_include_dir}/PNGLoader.h
 	)
 
 add_library(vkl SHARED ${vkl_source} ${vkl_includes})
@@ -59,8 +61,8 @@ endif()
 
 target_link_libraries(vkl PUBLIC unofficial::vulkan-memory-allocator::vulkan-memory-allocator glfw Vulkan::Vulkan ${SHADERC_LIB} glm)
 
-target_compile_definitions(vkl PRIVATE VKL_LIB)
-target_include_directories(vkl PUBLIC ${vkl_include_dir} ${Vulkan_INCLUDE_DIR} PRIVATE )
+target_compile_definitions(vkl PRIVATE VKL_LIB -DVKL_DATA_DIR="${VKL_DATA_DIR}")
+target_include_directories(vkl PUBLIC ${vkl_include_dir} ${Vulkan_INCLUDE_DIR} PRIVATE "${EXTERNAL_DIR}/include")
 
 
 Configure_Library(vkl)

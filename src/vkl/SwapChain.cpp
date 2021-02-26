@@ -108,6 +108,7 @@ namespace vkl
     {
         cleanUp(device);
         _options.swapChainExtent = targetExtent;
+        _imageIndex = 0;
         init(device, surface);
         registerRenderPass(device, compatiblePass);
     }
@@ -119,6 +120,36 @@ namespace vkl
         createColorResources(device, surface);
         createDepthResources(device, surface);
         createSyncObjects(device, surface);
+
+        VkCommandPoolCreateInfo poolInfo{};
+        poolInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
+        poolInfo.queueFamilyIndex = graphicsFamilyQueueIndex();
+        poolInfo.flags = VK_COMMAND_POOL_CREATE_TRANSIENT_BIT | VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
+
+        if (vkCreateCommandPool(device.handle(), &poolInfo, nullptr, &_commandPool) != VK_SUCCESS) {
+            throw std::runtime_error("Error");
+        }
+        _oneOffCommandBuffers.resize(framesInFlight());
+
+        VkCommandBufferAllocateInfo allocInfo{};
+        allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+        allocInfo.commandPool = _commandPool;
+        allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+        allocInfo.commandBufferCount = (uint32_t)_oneOffCommandBuffers.size();
+
+        if (vkAllocateCommandBuffers(device.handle(), &allocInfo, _oneOffCommandBuffers.data()) != VK_SUCCESS) {
+            throw std::runtime_error("Error");
+        }
+
+        if (!_prepped)
+        {
+            VkCommandBufferBeginInfo beginInfo{};
+            beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+            beginInfo.flags = 0;
+
+            vkBeginCommandBuffer(_oneOffCommandBuffers[_imageIndex], &beginInfo);
+            _prepped = true;
+        }
     }
 
     void SwapChain::createSwapChain(const Device& device, const Surface& surface)
@@ -274,6 +305,11 @@ namespace vkl
         return _swapChainExtent;
     }
 
+    VkCommandBuffer SwapChain::oneOffCommandBuffer(size_t frame) const
+    {
+        return _oneOffCommandBuffers[frame];
+    }
+
     void SwapChain::prepNextFrame(const Device& device, const Surface& surface, const CommandDispatcher& commands, const RenderPass& compatiblePass, const WindowSize& targetExtent)
     {
         vkWaitForFences(device.handle(), 1, &_inFlightFences[_frameClamp], VK_TRUE, UINT64_MAX);
@@ -283,16 +319,43 @@ namespace vkl
 
         if (result == VK_ERROR_OUT_OF_DATE_KHR) {
             reset(device, surface, commands, compatiblePass, targetExtent);
+            if (!_prepped)
+            {
+                VkCommandBufferBeginInfo beginInfo{};
+                beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+                beginInfo.flags = 0;
+
+                vkBeginCommandBuffer(_oneOffCommandBuffers[_imageIndex], &beginInfo);
+                _prepped = true;
+            }
             return;
         }
         else if (result != VK_SUCCESS && result != VK_SUBOPTIMAL_KHR) {
             throw std::runtime_error("Error");
         }
+
         _imageIndex = imageIndex;
+
+        if (!_prepped)
+        {
+            VkCommandBufferBeginInfo beginInfo{};
+            beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+            beginInfo.flags = 0;
+
+            vkBeginCommandBuffer(_oneOffCommandBuffers[_imageIndex], &beginInfo);
+            _prepped = true;
+        }
     }
 
     void SwapChain::swap(const Device& device, const Surface& surface, const CommandDispatcher& commands, const RenderPass& compatiblePass, const WindowSize& targetExtent)
     {
+
+        if (_prepped)
+        {
+            vkEndCommandBuffer(_oneOffCommandBuffers[_imageIndex]);
+            _prepped = false;
+        }
+
         bool resized = targetExtent.width != swapChainExtent().width || targetExtent.height != swapChainExtent().height;
 
 
@@ -311,9 +374,10 @@ namespace vkl
         submitInfo.pWaitSemaphores = waitSemaphores;
         submitInfo.pWaitDstStageMask = waitStages;
 
-        submitInfo.commandBufferCount = 1;
+        submitInfo.commandBufferCount = 2;
         auto cmdBuffer = commands.primaryCommandBuffer(_imageIndex);
-        submitInfo.pCommandBuffers = &cmdBuffer;
+        VkCommandBuffer cmdBuffers[2] = { _oneOffCommandBuffers[_imageIndex], cmdBuffer };
+        submitInfo.pCommandBuffers = cmdBuffers;
 
         VkSemaphore signalSemaphores[] = { _renderFinishedSemaphores[_frameClamp] };
         submitInfo.signalSemaphoreCount = 1;
@@ -348,6 +412,7 @@ namespace vkl
         }
 
         _frameClamp = (_frameClamp + 1) % MAX_FRAMES_IN_FLIGHT;
+
     }
 
     void SwapChain::createSyncObjects(const Device& device, const Surface& surface)

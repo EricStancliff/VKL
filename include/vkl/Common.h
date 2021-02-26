@@ -10,6 +10,14 @@
 #include <span>
 #include <stdexcept>
 
+//make sure everyone does this the same way
+#define GLM_FORCE_RADIANS
+#define GLM_FORCE_DEPTH_ZERO_TO_ONE
+#define GLM_ENABLE_EXPERIMENTAL
+#define GLM_FORCE_DEFAULT_ALIGNED_GENTYPES
+#include <glm/glm.hpp>
+
+
 
 #define VKL_VULKAN_VERSION VK_MAKE_VERSION(1, 0, 0)
 #define VKL_ENGINE_NAME "VKL"
@@ -54,6 +62,9 @@ namespace vkl
         std::vector<VkPresentModeKHR> presentModes;
     };
 
+    VKL_EXPORT std::string vklDataDir();
+
+    VKL_EXPORT void setVklDataDir(const std::string& dataDir);
 
     VKL_EXPORT QueueFamilyIndices findQueueFamilies(VkPhysicalDevice device, VkSurfaceKHR surface);
 
@@ -68,4 +79,10 @@ namespace vkl
     VKL_EXPORT VkImageView createImageView(const Device& device, VkImage image, VkFormat format, VkImageAspectFlags aspectFlags, uint32_t mipLevels);
 
     VKL_EXPORT void createImage(const Device& device, uint32_t width, uint32_t height, uint32_t mipLevels, VkSampleCountFlagBits numSamples, VkFormat format, VkImageTiling tiling, VkImageUsageFlags usage, VkMemoryPropertyFlags properties, VkImage& image, VmaAllocation& imageMemory);
+
+    VKL_EXPORT 	void transitionImageLayout(const Device& device, const SwapChain& swapChain, size_t frame, VkImage image, VkFormat format, VkImageLayout oldLayout, VkImageLayout newLayout, uint32_t mipLevels);
+
+    VKL_EXPORT void copyBufferToImage(const Device& device, const SwapChain& swapChain, size_t frame, VkBuffer buffer, VkImage image, uint32_t width, uint32_t height);
+
+    VKL_EXPORT void generateMipmaps(const Device& device, const SwapChain& swapChain, size_t frame, VkImage image, VkFormat imageFormat, int32_t texWidth, int32_t texHeight, uint32_t mipLevels);
 }

@@ -128,6 +128,9 @@ namespace vkl
         auto result = shaderc_compile_into_spv(compiler, data, size, shaderKind(_stage), _fileName.c_str(), "main", options);
 
         if (shaderc_result_get_compilation_status(result) != shaderc_compilation_status_success) {
+            std::string errorStr;
+            errorStr = shaderc_result_get_error_message(result);
+            std::cerr << errorStr;
             throw std::runtime_error("Error");
             return;
         }

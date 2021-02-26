@@ -18,16 +18,19 @@ set(VKL_OUTPUT_DIR ${CMAKE_CURRENT_BINARY_DIR}/bin)
 #Vulkan SDK needs to be "installed" on your machine w/o our help
 find_package(Vulkan REQUIRED)
 
+set(VKL_DATA_DIR ${CMAKE_SOURCE_DIR}/data)
 
 InitVcpkg()
+get_property(VCPKG_TARGET_TRIPLET GLOBAL PROPERTY VCPKG_TARGET_TRIPLET)
+set(EXTERNAL_DIR ${CMAKE_SOURCE_DIR}/external/${VCPKG_TARGET_TRIPLET})
+
 
 InstallExternal(glm)
 InstallExternal(glfw3)
 InstallExternal_Ext(vulkan-memory-allocator unofficial-vulkan-memory-allocator)
-#InstallExternal_Ext(shaderc glslang)
+InstallExternalNoFind(stb)
 
-get_property(VCPKG_TARGET_TRIPLET GLOBAL PROPERTY VCPKG_TARGET_TRIPLET)
-set(EXTERNAL_DIR ${CMAKE_SOURCE_DIR}/external/${VCPKG_TARGET_TRIPLET})
+#InstallExternal_Ext(shaderc glslang)
 
 set(DEBUGGING_PATHS "%PATH%")
 set(DEBUGGING_PATHS "${DEBUGGING_PATHS};${EXTERNAL_DIR}/bin")
