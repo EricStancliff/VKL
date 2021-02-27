@@ -32,6 +32,11 @@ namespace vkl
 		bool shouldClose() const;
 
 		static void pollEvents();
+
+		void cleanUp();
+
+		static void cleanUpWindowSystem();
+
 	private:
 		friend class Surface;
 		VkSurfaceKHR createSurfaceHandle_Private(const Instance& instance) const;

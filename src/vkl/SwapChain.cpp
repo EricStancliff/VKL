@@ -86,7 +86,18 @@ namespace vkl
 
     void SwapChain::cleanUp(const Device& device)
     {
-        vkDeviceWaitIdle(device.handle());
+        cleanUpSwapChain(device);
+        vkFreeCommandBuffers(device.handle(), _commandPool, (uint32_t)_oneOffCommandBuffers.size(), _oneOffCommandBuffers.data());
+        vkDestroyCommandPool(device.handle(), _commandPool, nullptr);
+        for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
+            vkDestroySemaphore(device.handle(), _renderFinishedSemaphores[i], nullptr);
+            vkDestroySemaphore(device.handle(), _imageAvailableSemaphores[i], nullptr);
+            vkDestroyFence(device.handle(), _inFlightFences[i], nullptr);
+        }
+    }
+
+    void SwapChain::cleanUpSwapChain(const Device& device)
+    {
         vkDestroyImageView(device.handle(), _depthImageView, nullptr);
         vmaDestroyImage(device.allocatorHandle(), _depthImage, _depthImageMemory);
 
@@ -106,7 +117,8 @@ namespace vkl
 
     void SwapChain::reset(const Device& device, const Surface& surface, const CommandDispatcher& commands, const RenderPass& compatiblePass, const WindowSize& targetExtent)
     {
-        cleanUp(device);
+        vkDeviceWaitIdle(device.handle());
+        cleanUpSwapChain(device);
         _options.swapChainExtent = targetExtent;
         _imageIndex = 0;
         init(device, surface);

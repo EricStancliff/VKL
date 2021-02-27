@@ -148,6 +148,20 @@ struct VulkanWindow
 	vkl::PipelineManager pipelineManager;
 	vkl::CommandDispatcher commandDispatcher;
 	std::vector<std::shared_ptr<vkl::RenderObject>> renderObjects;
+
+	void cleanUp(const vkl::Instance& instance)
+	{
+		device.waitIdle();
+		renderObjects.clear();
+		commandDispatcher.cleanUp(device);
+		pipelineManager.cleanUp(device);
+		bufferManager.cleanUp(device);
+		mainPass.cleanUp(device);
+		swapChain.cleanUp(device);
+		device.cleanUp();
+		surface.cleanUp(instance);
+		window.cleanUp();
+	}
 };
 
 VulkanWindow buildWindow(const vkl::Instance& instance, const std::string& title, const std::string& texture, bool png = false)
@@ -206,16 +220,32 @@ int main(int argc, char* argv[])
 	{
 		if (!window1Closed)
 		{
-			window1Closed = window1.window.shouldClose();
-			updateWindow(window1);
+			if (window1.window.shouldClose())
+			{
+				window1Closed = true;
+				window1.cleanUp(instance);
+			}
+			else
+			{
+				updateWindow(window1);
+			}
 		}
 		if (!window2Closed)
 		{
-			window2Closed = window2.window.shouldClose();
-			updateWindow(window2);
+			if (window2.window.shouldClose())
+			{
+				window2Closed = true;
+				window2.cleanUp(instance);
+			}
+			else
+			{
+				updateWindow(window2);
+			}
 		}
 
 		vkl::Window::pollEvents();
 	}
 
+	instance.cleanUp();
+	vkl::Window::cleanUpWindowSystem();
 }

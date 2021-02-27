@@ -20,6 +20,7 @@ namespace vkl
 
 		bool isValid(size_t frameIndex) const;
 
+		void cleanUp(const Device& device);
 	private:
 		void* _data{ nullptr };
 		size_t _elementSize{ 0 };

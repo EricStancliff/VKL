@@ -53,6 +53,8 @@ namespace vkl
 		void swap(const Device& device, const Surface& surface, const CommandDispatcher& commands, const RenderPass& compatiblePass, const WindowSize& targetExtent);
 
 	private:
+		void cleanUpSwapChain(const Device& device);
+
 		void reset(const Device& device, const Surface& surface, const CommandDispatcher& commands, const RenderPass& compatiblePass, const WindowSize& targetExtent);
 
 		void init(const Device& device, const Surface& surface);

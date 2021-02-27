@@ -96,6 +96,9 @@ namespace vkl
 		VkPipelineLayout pipelineLayoutHandle() const;
 
 		size_t type() const;
+
+		void cleanUp(const Device& device);
+
 	private:
 
 		void createDescriptorSetLayout(const Device& device, const SwapChain& swapChain, const PipelineDescription& description, const RenderPass& renderPass);
@@ -122,6 +125,8 @@ namespace vkl
 		PipelineManager(const Device& device, const SwapChain& swapChain, const RenderPass& renderPass);
 
 		const Pipeline* pipelineForType(size_t type) const;
+
+		void cleanUp(const Device& device);
 	private:
 		std::vector<Pipeline> _pipelines;
 	};

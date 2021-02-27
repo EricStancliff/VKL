@@ -19,6 +19,10 @@ namespace vkl
 
 		//We use VMA for vulkan memory - don't allocate your own buffers/images
 		VmaAllocator allocatorHandle() const;
+
+		void cleanUp();
+
+		void waitIdle();
 	private:
 
 		void pickPhysicalDevice(const Instance& instance, const Surface& surface);

@@ -44,8 +44,9 @@ namespace vkl
 		transitionImageLayout(device, swapChain, swapChain.frame(), _image, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, mipLevels);
 		copyBufferToImage(device, swapChain, swapChain.frame(), stagingBuffer, _image, static_cast<uint32_t>(_width), static_cast<uint32_t>(_height));
 
-		//TODO
-		//vmaDestroyBuffer(device.allocatorHandle(), stagingBuffer, stagingBufferMemory);
+		_createFrame = swapChain.frame();
+		_stagingBuffer = stagingBuffer;
+		_stagingMemory = stagingBufferMemory;
 
 		generateMipmaps(device, swapChain, swapChain.frame(), _image, VK_FORMAT_R8G8B8A8_SRGB, (uint32_t)_width, (uint32_t)_height, mipLevels);
 
@@ -116,5 +117,26 @@ namespace vkl
 	VkSampler TextureBuffer::samplerHandle() const
 	{
 		return _sampler;
+	}
+	void TextureBuffer::cleanUp(const Device& device)
+	{
+		vkDestroySampler(device.handle(), _sampler, nullptr);
+		vkDestroyImageView(device.handle(), _imageView, nullptr);
+		vmaDestroyImage(device.allocatorHandle(), _image, _memory);
+	}
+	void TextureBuffer::update(const Device& device, const SwapChain& swapChain)
+	{
+		if (!_seenFirstUpdate)
+		{
+			_seenFirstUpdate = true;
+			return;
+		}
+
+		if (_stagingBuffer != VK_NULL_HANDLE && _createFrame == swapChain.frame())
+		{
+			vmaDestroyBuffer(device.allocatorHandle(), _stagingBuffer, _stagingMemory);
+			_stagingBuffer = VK_NULL_HANDLE;
+			_stagingMemory = {};
+		}
 	}
 }

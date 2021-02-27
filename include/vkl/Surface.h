@@ -14,6 +14,8 @@ namespace vkl
 
 		VkSurfaceKHR handle() const;
 
+		void cleanUp(const Instance& instance);
+
 	private:
 		VkSurfaceKHR _handle;
 	};

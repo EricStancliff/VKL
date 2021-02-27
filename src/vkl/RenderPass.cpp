@@ -90,4 +90,9 @@ namespace vkl
     {
         return _options;
     }
+
+    void RenderPass::cleanUp(const Device& device)
+    {
+        vkDestroyRenderPass(device.handle(), _renderPass, nullptr);
+    }
 }

@@ -74,6 +74,17 @@ namespace vkl
 		glfwPollEvents();
 	}
 
+	void Window::cleanUp()
+	{
+		glfwDestroyWindow(_windowData->window);
+		_windowData->window = nullptr;
+	}
+
+	void Window::cleanUpWindowSystem()
+	{
+		glfwTerminate();
+	}
+
 	VkSurfaceKHR Window::createSurfaceHandle_Private(const Instance& instance) const
 	{
 		VkSurfaceKHR surface;

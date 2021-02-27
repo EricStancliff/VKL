@@ -24,6 +24,7 @@ namespace vkl
 
 		VkCommandBuffer primaryCommandBuffer(size_t frame) const;
 
+		void cleanUp(const Device& device);
 	private:
 		VkCommandPool _commandPool{ VK_NULL_HANDLE };
 		std::vector<std::unique_ptr<CommandThread>> _threads;

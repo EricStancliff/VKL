@@ -159,4 +159,12 @@ namespace vkl
     {
         return g_validationLayers;
     }
+    void Instance::cleanUp()
+    {
+        if (_debugMessenger != VK_NULL_HANDLE)
+        {
+            DestroyDebugUtilsMessengerEXT(_instance, _debugMessenger, nullptr);
+        }
+        vkDestroyInstance(_instance, nullptr);
+    }
 }

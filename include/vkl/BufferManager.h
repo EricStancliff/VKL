@@ -16,6 +16,8 @@ namespace vkl
 		std::shared_ptr<TextureBuffer> createTextureBuffer(const Device& device, const SwapChain& swapChain, void* imageData, size_t width, size_t height, size_t components);
 		std::shared_ptr<UniformBuffer> createUniformBuffer(const Device& device, const SwapChain& swapChain);
 
+		void cleanUp(const Device& device);
+
 	private:
 
 		std::vector<std::shared_ptr<IndexBuffer>> _indexBuffers;

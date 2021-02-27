@@ -98,4 +98,15 @@ namespace vkl
     {
         return _buffers[frameIndex]._buffer != VK_NULL_HANDLE;
     }
+    void IndexBuffer::cleanUp(const Device& device)
+    {
+        for (auto&& buffer : _buffers)
+        {
+            vmaDestroyBuffer(device.allocatorHandle(), buffer._buffer, buffer._memory);
+            buffer._memory = nullptr;
+            buffer._buffer = VK_NULL_HANDLE;
+            buffer._mapped = nullptr;
+        }
+        _buffers.clear();
+    }
 }

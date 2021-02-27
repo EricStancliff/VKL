@@ -21,11 +21,20 @@ namespace vkl
 			VkImage handle() const;
 			VkImageView imageViewHandle() const;
 			VkSampler samplerHandle() const;
+
+			void cleanUp(const Device& device);
+			void update(const Device& device, const SwapChain& swapChain);
+
 		private:
 			void* _data{ nullptr };
 			size_t _width{ 0 };
 			size_t _height{ 0 };
 			size_t _components{ 0 };
+
+			size_t _createFrame{ 0 };
+			VkBuffer _stagingBuffer{ VK_NULL_HANDLE };
+			VmaAllocation _stagingMemory{ };
+			bool _seenFirstUpdate{ false };
 
 			VkImage _image{ VK_NULL_HANDLE };
 			VmaAllocation _memory{  };

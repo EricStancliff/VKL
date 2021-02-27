@@ -80,6 +80,17 @@ namespace vkl
         return _allocator;
     }
 
+    void Device::cleanUp()
+    {
+        vmaDestroyAllocator(_allocator);
+        vkDestroyDevice(_device, nullptr);
+    }
+
+    void Device::waitIdle()
+    {
+        vkDeviceWaitIdle(_device);
+    }
+
     void Device::pickPhysicalDevice(const Instance& instance, const Surface& surface)
     {
         //Pick a GPU

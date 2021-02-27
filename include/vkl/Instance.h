@@ -17,6 +17,7 @@ namespace vkl
 
 		std::span<const char* const> getLayers() const;
 
+		void cleanUp();
 	private:
 		VkInstance _instance{ VK_NULL_HANDLE };
 		VkDebugUtilsMessengerEXT _debugMessenger{ VK_NULL_HANDLE };

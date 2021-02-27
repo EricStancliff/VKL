@@ -10,4 +10,8 @@ namespace vkl
 	{
 		return _handle;
 	}
+	void Surface::cleanUp(const Instance& instance)
+	{
+		vkDestroySurfaceKHR(instance.handle(), _handle, nullptr);
+	}
 }

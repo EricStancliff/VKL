@@ -23,6 +23,9 @@ namespace vkl
 		VkRenderPass handle() const;
 
 		const RenderPassOptions& options() const;
+
+		void cleanUp(const Device& device);
+
 	private:
 		VkRenderPass _renderPass{ VK_NULL_HANDLE };
 		RenderPassOptions _options;

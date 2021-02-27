@@ -92,6 +92,11 @@ namespace vkl
 		{
 			return _commandBuffers[frame];
 		}
+		void cleanUp(const Device& device)
+		{
+			vkFreeCommandBuffers(device.handle(), _commandPool, (uint32_t)_commandBuffers.size(), _commandBuffers.data());
+			vkDestroyCommandPool(device.handle(), _commandPool, nullptr);
+		}
 	private:
 		VkCommandPool _commandPool{ VK_NULL_HANDLE };
 		std::vector<VkCommandBuffer> _commandBuffers;
@@ -195,5 +200,12 @@ namespace vkl
 	VkCommandBuffer CommandDispatcher::primaryCommandBuffer(size_t frame) const
 	{
 		return _primaryBuffers[frame];
+	}
+	void CommandDispatcher::cleanUp(const Device& device)
+	{
+		for (auto&& thread : _threads)
+			thread->cleanUp(device);
+		vkFreeCommandBuffers(device.handle(), _commandPool, (uint32_t)_primaryBuffers.size(), _primaryBuffers.data());
+		vkDestroyCommandPool(device.handle(), _commandPool, nullptr);
 	}
 }

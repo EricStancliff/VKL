@@ -463,6 +463,14 @@ namespace vkl
 	{
 		return _pipelineLayout;
 	}
+
+	void Pipeline::cleanUp(const Device& device)
+	{
+		vkDestroyPipeline(device.handle(), _pipeline, nullptr);
+		vkDestroyPipelineLayout(device.handle(), _pipelineLayout, nullptr);
+		vkDestroyDescriptorSetLayout(device.handle(), _descriptorSetLayout, nullptr);
+		vkDestroyDescriptorPool(device.handle(), _descriptorPool, nullptr);
+	}
 	/*****************************************************************************************************************/
 	PipelineManager::PipelineManager(const Device& device, const SwapChain& swapChain, const RenderPass& renderPass)
 	{
@@ -496,5 +504,10 @@ namespace vkl
 			return nullptr;
 		return &(*findWhere);
 	}
-
+	void PipelineManager::cleanUp(const Device& device)
+	{
+		for (auto&& pipeline : _pipelines)
+			pipeline.cleanUp(device);
+		_pipelines.clear();
+	}
 }
