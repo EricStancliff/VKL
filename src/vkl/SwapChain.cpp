@@ -82,6 +82,38 @@ namespace vkl
     {
         _options = options;
         init(device, surface);
+        createSyncObjects(device, surface);
+
+        VkCommandPoolCreateInfo poolInfo{};
+        poolInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
+        poolInfo.queueFamilyIndex = graphicsFamilyQueueIndex();
+        poolInfo.flags = VK_COMMAND_POOL_CREATE_TRANSIENT_BIT | VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
+
+        if (vkCreateCommandPool(device.handle(), &poolInfo, nullptr, &_commandPool) != VK_SUCCESS) {
+            throw std::runtime_error("Error");
+        }
+        _oneOffCommandBuffers.resize(framesInFlight());
+
+        VkCommandBufferAllocateInfo allocInfo{};
+        allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+        allocInfo.commandPool = _commandPool;
+        allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+        allocInfo.commandBufferCount = (uint32_t)_oneOffCommandBuffers.size();
+
+        if (vkAllocateCommandBuffers(device.handle(), &allocInfo, _oneOffCommandBuffers.data()) != VK_SUCCESS) {
+            throw std::runtime_error("Error");
+        }
+
+        if (!_prepped)
+        {
+            VkCommandBufferBeginInfo beginInfo{};
+            beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+            beginInfo.flags = 0;
+
+            vkBeginCommandBuffer(_oneOffCommandBuffers[_imageIndex], &beginInfo);
+            _prepped = true;
+        }
+
     }
 
     void SwapChain::cleanUp(const Device& device)
@@ -131,37 +163,6 @@ namespace vkl
         createImageViews(device, surface);
         createColorResources(device, surface);
         createDepthResources(device, surface);
-        createSyncObjects(device, surface);
-
-        VkCommandPoolCreateInfo poolInfo{};
-        poolInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
-        poolInfo.queueFamilyIndex = graphicsFamilyQueueIndex();
-        poolInfo.flags = VK_COMMAND_POOL_CREATE_TRANSIENT_BIT | VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
-
-        if (vkCreateCommandPool(device.handle(), &poolInfo, nullptr, &_commandPool) != VK_SUCCESS) {
-            throw std::runtime_error("Error");
-        }
-        _oneOffCommandBuffers.resize(framesInFlight());
-
-        VkCommandBufferAllocateInfo allocInfo{};
-        allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
-        allocInfo.commandPool = _commandPool;
-        allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-        allocInfo.commandBufferCount = (uint32_t)_oneOffCommandBuffers.size();
-
-        if (vkAllocateCommandBuffers(device.handle(), &allocInfo, _oneOffCommandBuffers.data()) != VK_SUCCESS) {
-            throw std::runtime_error("Error");
-        }
-
-        if (!_prepped)
-        {
-            VkCommandBufferBeginInfo beginInfo{};
-            beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-            beginInfo.flags = 0;
-
-            vkBeginCommandBuffer(_oneOffCommandBuffers[_imageIndex], &beginInfo);
-            _prepped = true;
-        }
     }
 
     void SwapChain::createSwapChain(const Device& device, const Surface& surface)

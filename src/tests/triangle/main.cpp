@@ -138,5 +138,18 @@ int main(int argc, char* argv[])
 		window.pollEvents();
 	}
 
+	device.waitIdle();
+	renderObjects.clear();
+	commandDispatcher.cleanUp(device);
+	pipelineManager.cleanUp(device);
+	bufferManager.cleanUp(device);
+	mainPass.cleanUp(device);
+	swapChain.cleanUp(device);
+	device.cleanUp();
+	surface.cleanUp(instance);
+	window.cleanUp();
+
+	instance.cleanUp();
+	vkl::Window::cleanUpWindowSystem();
 
 }

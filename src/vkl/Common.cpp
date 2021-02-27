@@ -162,10 +162,6 @@ namespace vkl
 		imageInfo.samples = numSamples;
 		imageInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 
-		if (vkCreateImage(device.handle(), &imageInfo, nullptr, &image) != VK_SUCCESS) {
-			throw std::runtime_error("Error");
-		}
-
 		VmaAllocationCreateInfo allocInfo{};
 		allocInfo.usage = VMA_MEMORY_USAGE_GPU_ONLY;
 		vmaCreateImage(device.allocatorHandle(), &imageInfo, &allocInfo, &image, &imageMemory, nullptr);
