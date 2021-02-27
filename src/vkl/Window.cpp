@@ -30,6 +30,9 @@ namespace vkl
 		GLFWwindow* window{ nullptr };
 	};
 
+	Window::Window(Window&&) noexcept = default;
+	Window& Window::operator=(Window&&) noexcept = default;
+
 	Window::Window(int width, int height, const char* title)
 	{
 		if (!isGLFWInitialized())

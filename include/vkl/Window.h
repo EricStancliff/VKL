@@ -17,6 +17,10 @@ namespace vkl
 		Window(int width, int height, const char* title);
 		Window() = delete;
 		~Window();
+		Window(const Window&) = delete;
+		Window(Window&&) noexcept;
+		Window& operator=(Window&&) noexcept;
+		Window& operator=(const Window&) = delete;
 
 		static const char** getRequiredInstanceExtensions(uint32_t* count);
 
@@ -27,7 +31,7 @@ namespace vkl
 
 		bool shouldClose() const;
 
-		void pollEvents();
+		static void pollEvents();
 	private:
 		friend class Surface;
 		VkSurfaceKHR createSurfaceHandle_Private(const Instance& instance) const;
