@@ -1,6 +1,7 @@
 #include <vkl/TextureBuffer.h>
 #include <cmath>
 #include <cassert>
+#include <cstring>
 
 #include <vkl/Device.h>
 #include <vkl/SwapChain.h>

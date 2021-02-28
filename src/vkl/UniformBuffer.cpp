@@ -3,6 +3,8 @@
 #include <vkl/Device.h>
 #include <vkl/SwapChain.h>
 
+#include <cstring>
+
 namespace vkl
 {
     UniformBuffer::UniformBuffer(const Device& device, const SwapChain& swapChain)

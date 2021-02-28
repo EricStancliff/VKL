@@ -2,6 +2,8 @@
 #include <vkl/Device.h>
 #include <vkl/SwapChain.h>
 
+#include <cstring>
+
 namespace vkl
 {
 

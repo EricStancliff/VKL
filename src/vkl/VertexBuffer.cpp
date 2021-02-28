@@ -3,6 +3,8 @@
 #include <vkl/Device.h>
 #include <vkl/SwapChain.h>
 
+#include <cstring>
+
 namespace vkl
 {
     VertexBuffer::VertexBuffer(const Device& device, const SwapChain& swapChain)

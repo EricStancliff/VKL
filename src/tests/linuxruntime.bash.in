@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:.:@EXTERNAL_DIR@/lib
+export VULKAN_LAYER_PATH=@VULKAN_LAYERS_PATH@

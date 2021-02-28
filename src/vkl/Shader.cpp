@@ -5,6 +5,7 @@
 #include <shaderc/shaderc.h>
 #include <fstream>
 #include <iostream>
+#include <cstring>
 namespace vkl
 {
     shaderc_shader_kind shaderKind(VkShaderStageFlagBits stage)

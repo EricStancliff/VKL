@@ -37,7 +37,7 @@ set_target_properties( ${Target}
 else()
 set_target_properties( ${Target}
     PROPERTIES
-    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}"
+    RUNTIME_OUTPUT_DIRECTORY "${VKL_OUTPUT_DIR}"
     FOLDER "Tests"
 )
 endif()
@@ -67,7 +67,7 @@ set_target_properties( ${Target}
 else()
 set_target_properties( ${Target}
     PROPERTIES
-    LIBRARY_OUTPUT_DIRECTORY "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}"
+    LIBRARY_OUTPUT_DIRECTORY "${VKL_OUTPUT_DIR}"
     FOLDER "Libraries"
 )
 endif()

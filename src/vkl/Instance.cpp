@@ -5,6 +5,8 @@
 
 #include <vkl/Window.h>
 
+#include <cstring>
+
 namespace vkl
 {
     const std::vector<const char*> g_validationLayers = {
@@ -24,7 +26,7 @@ namespace vkl
             bool layerFound = false;
 
             for (const auto& layerProperties : availableLayers) {
-                if (strcmp(layerName, layerProperties.layerName) == 0) {
+                if (std::strcmp(layerName, layerProperties.layerName) == 0) {
                     layerFound = true;
                     break;
                 }

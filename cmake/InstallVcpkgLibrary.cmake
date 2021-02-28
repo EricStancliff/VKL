@@ -26,7 +26,7 @@ message(STATUS "Using vcpkg exe: ${VCPKG_EXE}.")
 if(WIN32)
 set(VCPKG_TARGET_TRIPLET x64-windows)
 else()
-#wut do
+set(VCPKG_TARGET_TRIPLET x64-linux)
 endif()
 
 set_property(GLOBAL PROPERTY VCPKG_EXECECUTABLE ${VCPKG_EXE})
@@ -46,7 +46,7 @@ message(STATUS ${INSTALL_COMMAND})
 execute_process(COMMAND ${VCPKG_EXE} install ${Target} --x-install-root=${CMAKE_SOURCE_DIR}/external OUTPUT_VARIABLE OUTPUT_STRING)
 message(STATUS "${OUTPUT_STRING}")
 set(CMAKE_PREFIX_PATH ${CMAKE_PREFIX_PATH} ${CMAKE_SOURCE_DIR}/external/${VCPKG_TARGET_TRIPLET}/share/${CMakeName})
-find_package(${CMakeName} CONFIG REQUIRED)
+find_package("${CMakeName}" CONFIG REQUIRED)
 endfunction()
 
 function(InstallExternal Target)
