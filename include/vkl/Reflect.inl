@@ -231,3 +231,4 @@ static bool initialized = reflect::_types_unsafe().addType<type>(#type);\
 return initialized;\
 }\
 bool type::_reflection_initialized = type::reflection_initialized();
+
