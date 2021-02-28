@@ -1,7 +1,7 @@
-#include <UniformBuffer.h>
+#include <vkl/UniformBuffer.h>
 
-#include <Device.h>
-#include <SwapChain.h>
+#include <vkl/Device.h>
+#include <vkl/SwapChain.h>
 
 namespace vkl
 {

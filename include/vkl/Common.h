@@ -1,7 +1,7 @@
 #pragma once
 #include <vulkan/vulkan.h>
 
-#include <VKL_EXPORT.h>
+#include <vkl/VKL_EXPORT.h>
 
 #include <vk_mem_alloc.h>
 
@@ -9,14 +9,6 @@
 #include <optional>
 #include <span>
 #include <stdexcept>
-
-//make sure everyone does this the same way
-#define GLM_FORCE_RADIANS
-#define GLM_FORCE_DEPTH_ZERO_TO_ONE
-#define GLM_ENABLE_EXPERIMENTAL
-#define GLM_FORCE_DEFAULT_ALIGNED_GENTYPES
-#include <glm/glm.hpp>
-
 
 
 #define VKL_VULKAN_VERSION VK_MAKE_VERSION(1, 0, 0)

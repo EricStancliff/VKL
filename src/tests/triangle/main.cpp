@@ -1,24 +1,20 @@
-#include <Common.h>
+#include <vkl/Common.h>
 
-#include <Instance.h>
-#include <Device.h>
-#include <SwapChain.h>
-#include <Window.h>
-#include <Surface.h>
-#include <RenderObject.h>
-#include <BufferManager.h>
-#include <Pipeline.h>
-#include <RenderPass.h>
-#include <CommandDispatcher.h>
-#include <VertexBuffer.h>
-#include <DrawCall.h>
-#include <IndexBuffer.h>
+#include <vkl/Instance.h>
+#include <vkl/Device.h>
+#include <vkl/SwapChain.h>
+#include <vkl/Window.h>
+#include <vkl/Surface.h>
+#include <vkl/RenderObject.h>
+#include <vkl/BufferManager.h>
+#include <vkl/Pipeline.h>
+#include <vkl/RenderPass.h>
+#include <vkl/CommandDispatcher.h>
+#include <vkl/VertexBuffer.h>
+#include <vkl/DrawCall.h>
+#include <vkl/IndexBuffer.h>
 
-#define GLM_FORCE_RADIANS
-#define GLM_FORCE_DEPTH_ZERO_TO_ONE
-#define GLM_ENABLE_EXPERIMENTAL
-#define GLM_FORCE_DEFAULT_ALIGNED_GENTYPES
-#include <glm/glm.hpp>
+#include <vxt/LinearAlgebra.h>
 
 constexpr const char* VertShader = R"Shader(
 

@@ -1,7 +1,7 @@
 #pragma once
-#include <Common.h>
-#include <Reflect.h>
-#include <Pipeline.h>
+#include <vkl/Common.h>
+#include <vkl/Reflect.h>
+#include <vkl/Pipeline.h>
 
 namespace vkl
 {

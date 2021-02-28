@@ -1,9 +1,9 @@
-#include "Instance.h"
+#include <vkl/Instance.h>
 
 #include <vector>
 #include <iostream>
 
-#include <Window.h>
+#include <vkl/Window.h>
 
 namespace vkl
 {

@@ -1,11 +1,11 @@
-#include <BufferManager.h>
+#include <vkl/BufferManager.h>
 
-#include <Device.h>
-#include <SwapChain.h>
-#include <VertexBuffer.h>
-#include <IndexBuffer.h>
-#include <TextureBuffer.h>
-#include <UniformBuffer.h>
+#include <vkl/Device.h>
+#include <vkl/SwapChain.h>
+#include <vkl/VertexBuffer.h>
+#include <vkl/IndexBuffer.h>
+#include <vkl/TextureBuffer.h>
+#include <vkl/UniformBuffer.h>
 
 namespace vkl
 {

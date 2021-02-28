@@ -1,9 +1,9 @@
-#include <CommandDispatcher.h>
+#include <vkl/CommandDispatcher.h>
 
-#include <Device.h>
-#include <SwapChain.h>
-#include <RenderObject.h>
-#include <RenderPass.h>
+#include <vkl/Device.h>
+#include <vkl/SwapChain.h>
+#include <vkl/RenderObject.h>
+#include <vkl/RenderPass.h>
 
 #include <future>
 #include <iostream>

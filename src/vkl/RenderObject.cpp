@@ -1,13 +1,13 @@
-#include <RenderObject.h>
-#include <Reflect.h>
+#include <vkl/RenderObject.h>
+#include <vkl/Reflect.h>
 
-#include <SwapChain.h>
-#include <Device.h>
-#include <VertexBuffer.h>
-#include <UniformBuffer.h>
-#include <TextureBuffer.h>
-#include <DrawCall.h>
-#include <IndexBuffer.h>
+#include <vkl/SwapChain.h>
+#include <vkl/Device.h>
+#include <vkl/VertexBuffer.h>
+#include <vkl/UniformBuffer.h>
+#include <vkl/TextureBuffer.h>
+#include <vkl/DrawCall.h>
+#include <vkl/IndexBuffer.h>
 
 namespace vkl
 {

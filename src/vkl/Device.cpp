@@ -1,11 +1,11 @@
-#include <Device.h>
+#include <vkl/Device.h>
 #include <vector>
 #include <optional>
 #include <set>
 #include <string>
 
-#include <Instance.h>
-#include <Surface.h>
+#include <vkl/Instance.h>
+#include <vkl/Surface.h>
 
 namespace vkl
 {

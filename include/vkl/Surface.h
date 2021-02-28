@@ -1,7 +1,7 @@
 #pragma once
-#include <Common.h>
-#include <Window.h>
-#include <Instance.h>
+#include <vkl/Common.h>
+#include <vkl/Window.h>
+#include <vkl/Instance.h>
 
 namespace vkl
 {

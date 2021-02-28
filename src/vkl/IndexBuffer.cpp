@@ -1,6 +1,6 @@
-#include <IndexBuffer.h>
-#include <Device.h>
-#include <SwapChain.h>
+#include <vkl/IndexBuffer.h>
+#include <vkl/Device.h>
+#include <vkl/SwapChain.h>
 
 namespace vkl
 {

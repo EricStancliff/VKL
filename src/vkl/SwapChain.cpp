@@ -1,14 +1,14 @@
-#include <SwapChain.h>
+#include <vkl/SwapChain.h>
 #include <vector>
 #include <array>
 
-#include <Device.h>
-#include <Window.h>
-#include <Surface.h>
-#include <SwapChain.h>
-#include <Instance.h>
-#include <RenderPass.h>
-#include <CommandDispatcher.h>
+#include <vkl/Device.h>
+#include <vkl/Window.h>
+#include <vkl/Surface.h>
+#include <vkl/SwapChain.h>
+#include <vkl/Instance.h>
+#include <vkl/RenderPass.h>
+#include <vkl/CommandDispatcher.h>
 
 namespace vkl
 {

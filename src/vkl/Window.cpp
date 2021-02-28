@@ -1,8 +1,8 @@
-#include <Window.h>
+#include <vkl/Window.h>
 
 #include <GLFW/glfw3.h>
 
-#include <Instance.h>
+#include <vkl/Instance.h>
 
 namespace
 {

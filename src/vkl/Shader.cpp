@@ -1,6 +1,6 @@
-#include <Shader.h>
+#include <vkl/Shader.h>
 
-#include <Device.h>
+#include <vkl/Device.h>
 
 #include <shaderc/shaderc.h>
 #include <fstream>

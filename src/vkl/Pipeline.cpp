@@ -1,11 +1,11 @@
-#include <Pipeline.h>
+#include <vkl/Pipeline.h>
 
-#include <Shader.h>
-#include <Reflect.h>
-#include <RenderObject.h>
-#include <Device.h>
-#include <RenderPass.h>
-#include <SwapChain.h>
+#include <vkl/Shader.h>
+#include <vkl/Reflect.h>
+#include <vkl/RenderObject.h>
+#include <vkl/Device.h>
+#include <vkl/RenderPass.h>
+#include <vkl/SwapChain.h>
 
 #include <array>
 

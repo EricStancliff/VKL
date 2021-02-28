@@ -1,20 +1,21 @@
-#include <Common.h>
+#include <vkl/Common.h>
 
-#include <Instance.h>
-#include <Device.h>
-#include <SwapChain.h>
-#include <Window.h>
-#include <Surface.h>
-#include <RenderObject.h>
-#include <BufferManager.h>
-#include <Pipeline.h>
-#include <RenderPass.h>
-#include <CommandDispatcher.h>
-#include <VertexBuffer.h>
-#include <DrawCall.h>
-#include <IndexBuffer.h>
+#include <vkl/Instance.h>
+#include <vkl/Device.h>
+#include <vkl/SwapChain.h>
+#include <vkl/Window.h>
+#include <vkl/Surface.h>
+#include <vkl/RenderObject.h>
+#include <vkl/BufferManager.h>
+#include <vkl/Pipeline.h>
+#include <vkl/RenderPass.h>
+#include <vkl/CommandDispatcher.h>
+#include <vkl/VertexBuffer.h>
+#include <vkl/DrawCall.h>
+#include <vkl/IndexBuffer.h>
 
-#include <PNGLoader.h>
+#include <vxt/PNGLoader.h>
+#include <vxt/LinearAlgebra.h>
 
 constexpr const char* VertShader = R"Shader(
 
@@ -99,7 +100,7 @@ public:
 
 		addDrawCall(device, swapChain, drawCall);
 
-		_imageData = vkl::loadJPGData((std::filesystem::path(vkl::vklDataDir()) / "textures" / "texture.jpg").make_preferred().string().c_str(), _width, _height, _components);
+		_imageData = vxt::loadJPGData((std::filesystem::path(vkl::vklDataDir()) / "textures" / "texture.jpg").make_preferred().string().c_str(), _width, _height, _components);
 
 		if (_imageData)
 		{
@@ -114,7 +115,7 @@ public:
 	~ImagePlane()
 	{
 		if(_imageData)
-			vkl::freeJPGData(_imageData);
+			vxt::freeJPGData(_imageData);
 	}
 private:
 	std::vector<Vertex> _verts;

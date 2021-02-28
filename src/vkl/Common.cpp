@@ -1,14 +1,14 @@
 #define VMA_IMPLEMENTATION
-#include <Common.h>
+#include <vkl/Common.h>
 
 #include <set>
 #include <string>
 
-#include <Device.h>
-#include <Window.h>
-#include <Surface.h>
-#include <SwapChain.h>
-#include <Instance.h>
+#include <vkl/Device.h>
+#include <vkl/Window.h>
+#include <vkl/Surface.h>
+#include <vkl/SwapChain.h>
+#include <vkl/Instance.h>
 
 namespace vkl
 {

@@ -1,8 +1,9 @@
-#include <TextureBuffer.h>
+#include <vkl/TextureBuffer.h>
 #include <cmath>
+#include <cassert>
 
-#include <Device.h>
-#include <SwapChain.h>
+#include <vkl/Device.h>
+#include <vkl/SwapChain.h>
 
 namespace vkl
 {

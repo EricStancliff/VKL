@@ -1,7 +1,7 @@
-#include <RenderPass.h>
+#include <vkl/RenderPass.h>
 
-#include <Device.h>
-#include <SwapChain.h>
+#include <vkl/Device.h>
+#include <vkl/SwapChain.h>
 
 #include <array>
 
