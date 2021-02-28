@@ -29,7 +29,6 @@ namespace vkl
             }
         }
 
-        throw std::runtime_error("Error");
         return VK_PRESENT_MODE_FIFO_KHR; //fallback who's impl is required for compliance
     }
 
