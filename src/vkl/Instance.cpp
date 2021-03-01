@@ -135,7 +135,7 @@ namespace vkl
             return;
         }
 
-        if (isValid())
+        if (isValid() && doValidation)
         {
             VkDebugUtilsMessengerCreateInfoEXT createInfo;
             populateDebugMessengerCreateInfo(createInfo);
