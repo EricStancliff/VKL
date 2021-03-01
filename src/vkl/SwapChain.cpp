@@ -253,7 +253,7 @@ namespace vkl
     void SwapChain::registerRenderPass(const Device& device, const RenderPass& renderPass)
     {
 
-        _swapChainFramebuffers.resize(_swapChainImageViews.size());
+        _swapChainFramebuffers.resize(_swapChainImageViews.size(), VK_NULL_HANDLE);
 
         for (size_t i = 0; i < _swapChainImageViews.size(); i++) {
             std::array<VkImageView, 3> attachments = {

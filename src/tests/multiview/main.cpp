@@ -213,7 +213,7 @@ int main(int argc, char* argv[])
 	vkl::Instance instance("triangle_vkl", true);
 
 	VulkanWindow window1 = buildWindow(instance, "window one", (std::filesystem::path(vkl::vklDataDir()) / "textures" / "texture.jpg").make_preferred().string());
-	VulkanWindow window2 = buildWindow(instance, "window two", (std::filesystem::path(vkl::vklDataDir()) / "textures" / "kelloggs.png").make_preferred().string(), true);
+	VulkanWindow window2 = buildWindow(instance, "window two", (std::filesystem::path(vkl::vklDataDir()) / "textures" / "kelloggs.PNG").make_preferred().string(), true);
 
 	bool window1Closed = false;
 	bool window2Closed = false;

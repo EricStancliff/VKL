@@ -47,11 +47,8 @@ namespace vkl
 		CommandThread& operator=(CommandThread&&) noexcept = default;
 		CommandThread& operator=(const CommandThread&) = delete;
 
-		std::future<VkCommandBuffer> processObjects(std::span< std::shared_ptr<RenderObject>> objects, const PipelineManager& pipelines, const RenderPass& pass, const SwapChain& swapChain, VkFramebuffer frameBuffer, const VkExtent2D& extent)
+		VkCommandBuffer processObjectsNow(std::span< std::shared_ptr<RenderObject>> objects, const PipelineManager& pipelines, const RenderPass& pass, const SwapChain& swapChain, VkFramebuffer frameBuffer, const VkExtent2D& extent)
 		{
-			return std::async( [&]() {
-
-
 				VkCommandBufferInheritanceInfo inherit{};
 				inherit.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_INHERITANCE_INFO;
 				inherit.framebuffer = frameBuffer;
@@ -85,6 +82,12 @@ namespace vkl
 				}
 
 				return _commandBuffers[swapChain.frame()];
+		}
+
+		std::future<VkCommandBuffer> processObjects(std::span< std::shared_ptr<RenderObject>> objects, const PipelineManager& pipelines, const RenderPass& pass, const SwapChain& swapChain, VkFramebuffer frameBuffer, const VkExtent2D& extent)
+		{
+			return std::async( [&]() {
+				return processObjectsNow(objects, pipelines, pass, swapChain, frameBuffer, extent);
 			});
 		}
 
@@ -145,6 +148,7 @@ namespace vkl
 	}
 	void CommandDispatcher::processUnsortedObjects(std::span< std::shared_ptr<RenderObject>> objects, const PipelineManager& pipelines, const RenderPass& pass, const SwapChain& swapChain, VkFramebuffer frameBuffer, const VkExtent2D& extent)
 	{
+
 		//record commands
 		size_t objectCount = objects.size();
 		size_t objectsPerThread = objectCount / _threads.size() + 1;
@@ -156,7 +160,12 @@ namespace vkl
 
 		while (offset < objects.size())
 		{
+			//TODO - Fix threading for linux
+			#ifdef WIN32
 			futures.push_back(_threads[threadIndex]->processObjects(objects.subspan(offset, objectsPerThread), pipelines, pass, swapChain, frameBuffer, extent));
+			#else
+			buffers.push_back(_threads[threadIndex]->processObjectsNow(objects.subspan(offset, objectsPerThread), pipelines, pass, swapChain, frameBuffer, extent));
+			#endif
 			offset += objectsPerThread;
 			++threadIndex;
 		}
