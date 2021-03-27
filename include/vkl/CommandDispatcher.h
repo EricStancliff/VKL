@@ -20,7 +20,7 @@ namespace vkl
 		CommandDispatcher& operator=(CommandDispatcher&&) noexcept;
 		CommandDispatcher& operator=(const CommandDispatcher&) = delete;
 
-		void processUnsortedObjects(std::span< std::shared_ptr<RenderObject>> objects, const PipelineManager& pipelines, const RenderPass& pass, const SwapChain& swapChain, VkFramebuffer frameBuffer, const VkExtent2D& extent);
+		void processUnsortedObjects(std::span< std::shared_ptr<RenderObject>> objects, const Device& device, const PipelineManager& pipelines, const RenderPass& pass, const SwapChain& swapChain, VkFramebuffer frameBuffer, const VkExtent2D& extent);
 
 		VkCommandBuffer primaryCommandBuffer(size_t frame) const;
 

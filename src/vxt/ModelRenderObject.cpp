@@ -2,6 +2,7 @@
 
 #include <vxt/Model.h>
 #include <vxt/Camera.h>
+#include <vkl/BufferManager.h>
 
 namespace
 {
@@ -9,7 +10,7 @@ namespace
 
 #version 450
 
-layout(push_constant) uniform MVP {
+layout(binding = 2) uniform MVP {
 	mat4 model;
 	mat4 view;
 	mat4 proj;
@@ -24,6 +25,7 @@ layout(location = 0) out vec2 fragUV;
 
 void main() {
     gl_Position = u_mvp.proj * u_mvp.view * u_mvp.model * u_mvp.shape * vec4(inPosition, 1);
+	fragUV = inUV;
 }
 
 )Shader";
@@ -40,6 +42,7 @@ layout(location = 0) out vec4 outColor;
 
 void main() {
     outColor = texture(texSampler, fragUV);
+	//outColor = vec4(1, 1, 1, 1);
 }
 
 )Shader";
@@ -62,13 +65,12 @@ namespace vxt
 		description.declareVertexAttribute(0, 2, VK_FORMAT_R32G32_SFLOAT, sizeof(Model::Vertex), offsetof(Model::Vertex, uv0));
 
 		description.declareTexture(1);
-		description.declarePushConstant(sizeof(MVP));
+		description.declareUniform(2, sizeof(MVP));
 	}
 
-	void ModelShapeObject::init(const vkl::Device& device, const vkl::SwapChain& swapChain, vkl::BufferManager& bufferManager, const vkl::PipelineManager& pipelines)
+	ModelShapeObject::ModelShapeObject(const vkl::Device& device, const vkl::SwapChain& swapChain, const vkl::PipelineManager& pipelines, vkl::BufferManager& bufferManager)
 	{
-		vkl::RenderObject::init(device, swapChain, bufferManager, pipelines);
-		_pushConstant = std::make_shared < vkl::PushConstant<MVP>>();
+		_uniform = bufferManager.createTypedUniform<MVP>(device, swapChain);
 	}
 
 	void ModelShapeObject::setShape(const vkl::Device& device, const vkl::SwapChain& swapChain, std::shared_ptr<const Model> model, size_t index)
@@ -84,14 +86,15 @@ namespace vxt
 
 		const auto& shape = model->getPrimitives()[index];
 
-		addVBO(device, swapChain, model->getVertexBuffer(), 0);
-		addDrawCall(device, swapChain, shape.draw);
+		addVBO(model->getVertexBuffer(), 0);
+		addDrawCall(shape.draw);
 
-		_pushConstant->typedData().shape = shape.transform;
+		_transform.shape = shape.transform;
+		addUniform(_uniform, 2);
 
-		if (shape.material > 0 && shape.material <= model->getMaterials().size())
+		if (shape.material >= 0 && shape.material < model->getMaterials().size())
 		{
-			addTexture(device, swapChain, model->getMaterials()[shape.material].baseColorTexture, 1);
+			addTexture(model->getMaterials()[shape.material].baseColorTexture, 1);
 		}
 	}
 	size_t ModelShapeObject::getShape() const
@@ -101,9 +104,10 @@ namespace vxt
 
 	void ModelShapeObject::update(const vkl::Device& device, const vkl::SwapChain& swapChain, const glm::mat4& model, const Camera& cam)
 	{
-		_pushConstant->typedData().model = model;
-		_pushConstant->typedData().view = cam.view();
-		_pushConstant->typedData().proj = cam.projection();
+		_transform.model = model;
+		_transform.view = cam.view();
+		_transform.proj = cam.projection();
+		_uniform->setData(_transform);
 	}
 
 	void ModelRenderObject::setModel(const vkl::Device& device, const vkl::SwapChain& swapChain, vkl::BufferManager& bufferManager, const vkl::PipelineManager& pipelines, std::shared_ptr<const Model> model)
@@ -117,8 +121,7 @@ namespace vxt
 
 		for (int i = 0; i < model->getPrimitives().size(); ++i)
 		{
-			auto shape = std::make_shared<ModelShapeObject>();
-			shape->init(device, swapChain, bufferManager, pipelines);
+			auto shape = std::make_shared<ModelShapeObject>(device, swapChain, pipelines, bufferManager);
 			shape->setShape(device, swapChain, model, i);
 			_shapes.push_back(shape);
 		}

@@ -40,7 +40,14 @@ namespace vxt
 		static AssetFactory& instance();
 
 		std::shared_ptr<const FileAsset> fileAsset(std::string_view file, std::string_view driverHint = "");
+
 		std::shared_ptr<const DeviceAsset> deviceAsset(std::string_view file, const vkl::Device& device, const vkl::SwapChain& swapChain, vkl::BufferManager& bufferManager, std::string_view driverHint = "");
+
+		template <typename T>
+		std::shared_ptr<const T> deviceAsset(std::string_view file, const vkl::Device& device, const vkl::SwapChain& swapChain, vkl::BufferManager& bufferManager, std::string_view driverHint = "")
+		{
+			return std::dynamic_pointer_cast<const T>(deviceAsset(file, device, swapChain, bufferManager, driverHint));
+		}
 
 		bool registerDriver(std::shared_ptr<const AssetDriver> driver);
 

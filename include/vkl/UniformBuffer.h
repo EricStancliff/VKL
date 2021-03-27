@@ -25,6 +25,8 @@ namespace vkl
 			void* _data{ nullptr };
 			size_t _size{ 0 };
 
+			void updateBuffer(const Device& device, size_t frame);
+
 			struct BufferInfo
 			{
 				VkBuffer _buffer{ VK_NULL_HANDLE };
@@ -47,7 +49,7 @@ namespace vkl
 			void setData(const T& data)
 			{
 				_ourData = data;
-				setData((void*)&_ourData, sizeof(T));
+				UniformBuffer::setData((void*)&_ourData, sizeof(T));
 			}
 
 		private:
@@ -57,7 +59,7 @@ namespace vkl
 		class PushConstantBase
 		{
 		public:
-			virtual void* data() const = 0;
+			virtual const void* data() const = 0;
 			virtual size_t size() const = 0;
 		};
 
@@ -70,9 +72,9 @@ namespace vkl
 				_ourData = data;
 			}
 
-			void* data() const override
+			const void* data() const override
 			{
-				return (void*)&_ourData;
+				return (const void*)&_ourData;
 			}
 
 			size_t size() const override

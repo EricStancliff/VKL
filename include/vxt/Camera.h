@@ -1,11 +1,12 @@
 #pragma once
 
 #include <vxt/LinearAlgebra.h>
+#include <vxt/VXT_EXPORT.h>
 
 namespace vxt
 {
 
-	class Camera
+	class VXT_EXPORT Camera
 	{
 	public:
 		Camera() = default;

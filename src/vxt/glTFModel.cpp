@@ -139,7 +139,11 @@ namespace vxt
 	{
 	public:
 		glTFModel() = default;
-		virtual ~glTFModel() = default;
+		virtual ~glTFModel()
+		{
+			for (auto buff : _buffsToDelete)
+				delete[] buff;
+		}
 		glTFModel(const glTFModel&) = delete;
 		glTFModel(glTFModel&&) noexcept = default;
 		glTFModel& operator=(glTFModel&&) noexcept = default;
@@ -167,15 +171,15 @@ namespace vxt
 			loadTextureSamplers(gltfModel);
 			loadTextures(gltfModel, device, swapChain, bufferManager);
 			loadMaterials(gltfModel);
-			
+			_indexBuffer = bufferManager.createIndexBuffer(device, swapChain);
+
 			for (auto& scene : gltfModel.scenes)
 				for (auto& node : scene.nodes)
 					loadNode(-1, gltfModel.nodes[node], node, gltfModel);
 
 			_vertexBuffer = bufferManager.createVertexBuffer(device, swapChain);
-			_vertexBuffer->setData(_verts.data(), _verts.size(), sizeof(Vertex));
+			_vertexBuffer->setData(_verts.data(), sizeof(Vertex), _verts.size());
 
-			_indexBuffer = bufferManager.createIndexBuffer(device, swapChain);
 			_indexBuffer->setData(_indices);
 		
 			return true;
@@ -186,7 +190,7 @@ namespace vxt
 		void loadTextures(const tinygltf::Model& gltfModel, const vkl::Device& device, const vkl::SwapChain& swapChain, vkl::BufferManager& bufferManager)
 		{
 			for (const tinygltf::Texture& tex : gltfModel.textures) {
-				tinygltf::Image gltfimage = gltfModel.images[tex.source];
+				const tinygltf::Image& gltfimage = gltfModel.images[tex.source];
 
 				vkl::TextureOptions options{};
 				
@@ -194,16 +198,15 @@ namespace vxt
 					options = _texOptions[tex.sampler];
 				}
 
-				unsigned char* buffer = nullptr;
+				const unsigned char* buffer = nullptr;
 				VkDeviceSize bufferSize = 0;
-				bool deleteBuffer = false;
 				if (gltfimage.component == 3) {
 					// Most devices don't support RGB only on Vulkan so convert if necessary
 					// TODO: Check actual format support and transform only if required
 					bufferSize = gltfimage.width * gltfimage.height * 4;
-					buffer = new unsigned char[bufferSize];
-					unsigned char* rgba = buffer;
-					unsigned char* rgb = &gltfimage.image[0];
+					auto myBuffer = new unsigned char[bufferSize];
+					unsigned char* rgba = myBuffer;
+					const unsigned char* rgb = &gltfimage.image[0];
 					for (int32_t i = 0; i < gltfimage.width * gltfimage.height; ++i) {
 						for (int32_t j = 0; j < 3; ++j) {
 							rgba[j] = rgb[j];
@@ -211,7 +214,8 @@ namespace vxt
 						rgba += 4;
 						rgb += 3;
 					}
-					deleteBuffer = true;
+					buffer = myBuffer;
+					_buffsToDelete.push_back(myBuffer);
 				}
 				else {
 					buffer = &gltfimage.image[0];
@@ -221,10 +225,6 @@ namespace vxt
 				//creates static texture in GPU local memory, so no need to preserve the buffer above
 				_textureBuffers.emplace_back(std::move(bufferManager.createTextureBuffer(device, swapChain, buffer, gltfimage.width, gltfimage.height, 4)));
 
-				if (deleteBuffer)
-				{
-					delete[] buffer;
-				}
 			}
 		}
 
@@ -560,6 +560,7 @@ namespace vxt
 		//node stuffs
 		std::vector<NodeTransform> _nodeTransforms;
 		std::vector<int> _nodeParents;
+		std::vector<unsigned char*> _buffsToDelete;
 	};
 
 	class VXT_EXPORT glTFDriver : public AssetDriver

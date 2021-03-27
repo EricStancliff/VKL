@@ -17,8 +17,8 @@ namespace vxt
 	public:
 		static void describePipeline(vkl::PipelineDescription& description);
 
-		ModelShapeObject() = default;
-		virtual void init(const vkl::Device& device, const vkl::SwapChain& swapChain, vkl::BufferManager& bufferManager, const vkl::PipelineManager& pipelines) override;
+		ModelShapeObject() = delete;
+		ModelShapeObject(const vkl::Device& device, const vkl::SwapChain& swapChain, const vkl::PipelineManager& pipelines, vkl::BufferManager& bufferManager);
 		~ModelShapeObject() = default;
 		ModelShapeObject(const ModelShapeObject&) = delete;
 		ModelShapeObject& operator=(const ModelShapeObject&) = delete;
@@ -41,8 +41,8 @@ namespace vxt
 
 	private:
 		size_t _shapeIndex{ 0 };
-		std::shared_ptr<const Model> _model;
-		std::shared_ptr<vkl::PushConstant<MVP>> _pushConstant;
+		MVP _transform;
+		std::shared_ptr<vkl::TypedUniform<MVP>> _uniform;
 	};
 
 	class VXT_EXPORT ModelRenderObject

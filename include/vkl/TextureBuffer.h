@@ -20,10 +20,10 @@ namespace vkl
 	{
 	public:
 		TextureBuffer() = delete;
-		TextureBuffer(const Device& device, const SwapChain& swapChain, void* imageData, size_t width, size_t height, size_t components, const TextureOptions& options = {});
+		TextureBuffer(const Device& device, const SwapChain& swapChain, const void* imageData, size_t width, size_t height, size_t components, const TextureOptions& options = {});
 		~TextureBuffer();
 
-		void* data() const;
+		const void* data() const;
 		size_t width() const;
 		size_t height() const;
 		size_t components() const;
@@ -39,7 +39,7 @@ namespace vkl
 		void update(const Device& device, const SwapChain& swapChain);
 
 	private:
-		void* _data{ nullptr };
+		const void* _data{ nullptr };
 		size_t _width{ 0 };
 		size_t _height{ 0 };
 		size_t _components{ 0 };

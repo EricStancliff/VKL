@@ -35,7 +35,6 @@ namespace vkl
 		//poll once for all windows, then update each one
 		void clearLastFrame();
 		static void pollEventsForAllWindows();
-		void updateToThisFrame();
 
 		std::span<std::unique_ptr<const Event>> events() const;
 

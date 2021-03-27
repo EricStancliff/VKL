@@ -10,7 +10,7 @@ namespace vkl
 {
 
 
-	TextureBuffer::TextureBuffer(const Device& device, const SwapChain& swapChain, void* imageData, size_t width, size_t height, size_t components, const TextureOptions& options)
+	TextureBuffer::TextureBuffer(const Device& device, const SwapChain& swapChain, const void* imageData, size_t width, size_t height, size_t components, const TextureOptions& options)
 	{
 		_data = imageData;
 		_width = width;
@@ -84,7 +84,7 @@ namespace vkl
 	{
 	}
 
-	void* TextureBuffer::data() const
+	const void* TextureBuffer::data() const
 	{
 		return _data;
 	}

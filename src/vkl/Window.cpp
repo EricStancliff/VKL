@@ -302,6 +302,8 @@ namespace
 		event->height = height;
 		event->width = width;
 		userWindow->events.push_back(std::move(event));
+		userWindow->width = width;
+		userWindow->height = height;
 	}
 
 	static void windowPosCallback(GLFWwindow* window, int xpos, int ypos) {
@@ -310,6 +312,8 @@ namespace
 		event->x = xpos;
 		event->y = ypos;
 		userWindow->events.push_back(std::move(event));
+		userWindow->x = xpos;
+		userWindow->y = ypos;
 	}
 
 	static void cursorPosCallback(GLFWwindow* window, double xpos, double ypos){
@@ -376,6 +380,13 @@ namespace
 		event->yOffset = yoffset;
 		userWindow->events.push_back(std::move(event));
 	}
+	static void focusCallback(GLFWwindow* window, int focused) {
+		auto userWindow = reinterpret_cast<vkl::WindowData*>(glfwGetWindowUserPointer(window));
+		auto event = std::make_unique<vkl::FocusEvent>();
+		event->focused = focused == GLFW_TRUE;
+		userWindow->events.push_back(std::move(event));
+		userWindow->focused = focused == GLFW_TRUE;
+	}
 
 }
 
@@ -402,6 +413,19 @@ namespace vkl
 		glfwSetKeyCallback(_windowData->window, keyCallback);
 		glfwSetCharCallback(_windowData->window, charCallback);
 		glfwSetScrollCallback(_windowData->window, scrollCallback);
+		glfwSetWindowFocusCallback(_windowData->window, focusCallback);
+
+		int xpos, ypos;
+		glfwGetWindowPos(_windowData->window, &xpos, &ypos);
+		_windowData->x = xpos;
+		_windowData->y = ypos;
+
+		int w, h;
+		glfwGetFramebufferSize(_windowData->window, &w, &h);
+		_windowData->width = w;
+		_windowData->height = h;
+
+		_windowData->focused = glfwGetWindowAttrib(_windowData->window, GLFW_FOCUSED) == GLFW_TRUE;
 
 	}
 	Window::~Window()
@@ -437,13 +461,6 @@ namespace vkl
 	void Window::pollEventsForAllWindows()
 	{
 		glfwPollEvents();
-	}
-
-	void Window::updateToThisFrame()
-	{
-		glfwGetWindowPos(_windowData->window, &_windowData->x, &_windowData->y);
-		glfwGetWindowSize(_windowData->window, &_windowData->width, &_windowData->height);
-		_windowData->focused = glfwGetWindowAttrib(_windowData->window, GLFW_FOCUSED);
 	}
 
 	std::span<std::unique_ptr<const Event>> Window::events() const

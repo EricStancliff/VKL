@@ -50,6 +50,8 @@ namespace vxt
 		updated |= rotate(window, camera);
 		updated |= translate(window, camera);
 
+		updateProjection(window, camera);
+
 		return updated;
 	}
 

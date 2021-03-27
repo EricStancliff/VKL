@@ -146,9 +146,10 @@ namespace vkl
 	CommandDispatcher::~CommandDispatcher()
 	{
 	}
-	void CommandDispatcher::processUnsortedObjects(std::span< std::shared_ptr<RenderObject>> objects, const PipelineManager& pipelines, const RenderPass& pass, const SwapChain& swapChain, VkFramebuffer frameBuffer, const VkExtent2D& extent)
+	void CommandDispatcher::processUnsortedObjects(std::span< std::shared_ptr<RenderObject>> objects, const Device& device, const PipelineManager& pipelines, const RenderPass& pass, const SwapChain& swapChain, VkFramebuffer frameBuffer, const VkExtent2D& extent)
 	{
-
+		for (auto&& ro : objects)
+			ro->updateDescriptors(device, swapChain, pipelines);
 		//record commands
 		size_t objectCount = objects.size();
 		size_t objectsPerThread = objectCount / _threads.size() + 1;

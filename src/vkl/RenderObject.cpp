@@ -32,6 +32,9 @@ namespace vkl
 
 		vkCmdBindDescriptorSets(buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline->pipelineLayoutHandle(), 0, 1, &_descriptorSets[swapChain.frame()], 0, nullptr);
 
+		if (_pushConstant)
+			vkCmdPushConstants(buffer, pipeline->pipelineLayoutHandle(), VK_SHADER_STAGE_ALL_GRAPHICS, 0, (uint32_t)_pushConstant->size(), _pushConstant->data());
+
 		for (auto&& dc : _drawCalls)
 		{
 			//TODO - let draw calls scissor
@@ -56,74 +59,84 @@ namespace vkl
 
 	}
 
+	void RenderObject::updateDescriptors(const Device& device, const SwapChain& swapChain, const PipelineManager& pipelines)
+	{
+		if (!m_init)
+			initPipeline(device, swapChain, pipelines);
+
+		for (auto&& uniform : _uniforms)
+		{
+			if (uniform.second->isValid(swapChain.frame()))
+			{
+				VkDescriptorBufferInfo bufferInfo{};
+				bufferInfo.buffer = uniform.second->handle(swapChain.frame());
+				bufferInfo.offset = 0;
+				bufferInfo.range = uniform.second->size();
+
+				VkWriteDescriptorSet descriptorWrite{};
+				descriptorWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+				descriptorWrite.dstSet = _descriptorSets[swapChain.frame()];
+				descriptorWrite.dstBinding = uniform.first;
+				descriptorWrite.dstArrayElement = 0;
+				descriptorWrite.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+				descriptorWrite.descriptorCount = 1;
+				descriptorWrite.pBufferInfo = &bufferInfo;
+
+				vkUpdateDescriptorSets(device.handle(), 1, &descriptorWrite, 0, nullptr);
+			}
+		}
+		for (auto&& tex : _textures)
+		{
+			if (tex.second->isValid(swapChain.frame()))
+			{
+				VkDescriptorImageInfo imageInfo{};
+				imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+				imageInfo.imageView = tex.second->imageViewHandle();
+				imageInfo.sampler = tex.second->samplerHandle();
+
+				VkWriteDescriptorSet descriptorWrite{};
+				descriptorWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+				descriptorWrite.dstSet = _descriptorSets[swapChain.frame()];
+				descriptorWrite.dstBinding = tex.first;
+				descriptorWrite.dstArrayElement = 0;
+				descriptorWrite.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+				descriptorWrite.descriptorCount = 1;
+				descriptorWrite.pImageInfo = &imageInfo;
+
+				vkUpdateDescriptorSets(device.handle(), 1, &descriptorWrite, 0, nullptr);
+			}
+		}
+	}
+
 	std::shared_ptr<const PipelineDescription> RenderObject::pipelineDescription() const
 	{
 		return PipelineMetaFactory::instance().description(std::type_index(typeid(*this)));
 	}
 
-	void RenderObject::addVBO(const Device& device, const SwapChain& swapChain, std::shared_ptr<const VertexBuffer> vbo, uint32_t binding)
+	void RenderObject::addVBO(std::shared_ptr<const VertexBuffer> vbo, uint32_t binding)
 	{
 		_vbos.push_back({ binding, vbo });
 		std::sort(_vbos.begin(), _vbos.end(), [](const auto& lhs, const auto& rhs) {
 			return lhs.first < rhs.first;
 			});
 	}
-	void RenderObject::addUniform(const Device& device, const SwapChain& swapChain, std::shared_ptr<const UniformBuffer> uniform, uint32_t binding)
+	void RenderObject::addUniform(std::shared_ptr<const UniformBuffer> uniform, uint32_t binding)
 	{
-		for (int i = 0; i < swapChain.framesInFlight(); ++i)
-		{
-			VkDescriptorBufferInfo bufferInfo{};
-			bufferInfo.buffer = uniform->handle(i);
-			bufferInfo.offset = 0;
-			bufferInfo.range = uniform->size();
-
-			VkWriteDescriptorSet descriptorWrite{};
-			descriptorWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-			descriptorWrite.dstSet = _descriptorSets[i];
-			descriptorWrite.dstBinding = binding;
-			descriptorWrite.dstArrayElement = 0;
-			descriptorWrite.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-			descriptorWrite.descriptorCount = 1;
-			descriptorWrite.pBufferInfo = &bufferInfo;
-
-			vkUpdateDescriptorSets(device.handle(), 1, &descriptorWrite, 0, nullptr);
-		}
-		
 		_uniforms.push_back({ binding, uniform });
 		std::sort(_uniforms.begin(), _uniforms.end(), [](const auto& lhs, const auto& rhs) {
 			return lhs.first < rhs.first;
 			});
 
 	}
-	void RenderObject::addTexture(const Device& device, const SwapChain& swapChain, std::shared_ptr<const TextureBuffer> texture, uint32_t binding)
+	void RenderObject::addTexture(std::shared_ptr<const TextureBuffer> texture, uint32_t binding)
 	{
-		for (int i = 0; i < swapChain.framesInFlight(); ++i)
-		{
-			VkDescriptorImageInfo imageInfo{};
-			imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-			imageInfo.imageView = texture->imageViewHandle();
-			imageInfo.sampler = texture->samplerHandle();
-
-			VkWriteDescriptorSet descriptorWrite{};
-			descriptorWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-			descriptorWrite.dstSet = _descriptorSets[i];
-			descriptorWrite.dstBinding = binding;
-			descriptorWrite.dstArrayElement = 0;
-			descriptorWrite.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-			descriptorWrite.descriptorCount = 1;
-			descriptorWrite.pImageInfo = &imageInfo;
-
-			vkUpdateDescriptorSets(device.handle(), 1, &descriptorWrite, 0, nullptr);
-		}
-
-		//TODO
 		_textures.push_back({ binding, texture });
 		std::sort(_textures.begin(), _textures.end(), [](const auto& lhs, const auto& rhs) {
 			return lhs.first < rhs.first;
 			});
 
 	}
-	void RenderObject::addDrawCall(const Device& device, const SwapChain& swapChain, std::shared_ptr<const DrawCall> draw)
+	void RenderObject::addDrawCall(std::shared_ptr<const DrawCall> draw)
 	{
 		_drawCalls.push_back(draw);
 	}
@@ -139,11 +152,8 @@ namespace vkl
 		_vbos.clear();
 		_uniforms.clear();
 	}
-	void RenderObject::init(const Device& device, const SwapChain& swapChain, BufferManager& bufferManager, const PipelineManager& pipelines)
-	{
-		initPipeline(device, swapChain, bufferManager, pipelines);
-	}
-	void RenderObject::initPipeline(const Device& device, const SwapChain& swapChain, BufferManager& bufferManager, const PipelineManager& pipelines)
+
+	void RenderObject::initPipeline(const Device& device, const SwapChain& swapChain,const PipelineManager& pipelines)
 	{
 		const Pipeline* pipeline = pipelines.pipelineForType(std::type_index(typeid(*this)));
 		if (!pipeline)
@@ -164,6 +174,6 @@ namespace vkl
 		if (vkAllocateDescriptorSets(device.handle(), &allocInfo, _descriptorSets.data()) != VK_SUCCESS) {
 			throw std::runtime_error("Error");
 		}
-
+		m_init = true;
 	}
 }

@@ -58,10 +58,9 @@ namespace vxt
 			{
 				for (auto p : std::filesystem::recursive_directory_iterator(sp.first, ec))
 				{
-					auto temp = std::filesystem::absolute((p.path() / path), ec);
-					if (std::filesystem::exists(path, ec))
+					if (p.path().filename() == path.filename())
 					{
-						out = temp;
+						out = p.path();
 						return true;
 					}
 				}
@@ -70,10 +69,9 @@ namespace vxt
 			{
 				for (auto p : std::filesystem::directory_iterator(sp.first, ec))
 				{
-					auto temp = std::filesystem::absolute((p.path() / path), ec);
-					if (std::filesystem::exists(path, ec))
+					if (p.path().filename() == path.filename())
 					{
-						out = temp;
+						out = p.path();
 						return true;
 					}
 				}

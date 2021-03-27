@@ -11,22 +11,22 @@ namespace vkl
 	{
 	public:
 		RenderObject() = default;
-		virtual void init(const Device& device, const SwapChain& swapChain, BufferManager& bufferManager, const PipelineManager& pipelines);
 
 		virtual void recordCommands(const SwapChain& swapChain, const PipelineManager& pipelines, VkCommandBuffer buffer, const VkExtent2D& extent);
+		virtual void updateDescriptors(const Device& device, const SwapChain& swapChain, const PipelineManager& pipelines);
 
 		std::shared_ptr<const PipelineDescription> pipelineDescription() const;
 	protected:
-		void addVBO(const Device& device, const SwapChain& swapChain, std::shared_ptr<const VertexBuffer> vbo, uint32_t binding);
-		void addUniform(const Device& device, const SwapChain& swapChain, std::shared_ptr<const UniformBuffer> uniform, uint32_t binding);
-		void addTexture(const Device& device, const SwapChain& swapChain, std::shared_ptr<const TextureBuffer>texture, uint32_t binding);
-		void addDrawCall(const Device& device, const SwapChain& swapChain, std::shared_ptr<const DrawCall> draw);
+		void addVBO(std::shared_ptr<const VertexBuffer> vbo, uint32_t binding);
+		void addUniform(std::shared_ptr<const UniformBuffer> uniform, uint32_t binding);
+		void addTexture(std::shared_ptr<const TextureBuffer>texture, uint32_t binding);
+		void addDrawCall(std::shared_ptr<const DrawCall> draw);
 
 		void setPushConstant(std::shared_ptr<const PushConstantBase> pc);
 
 		void reset();
 
-		void initPipeline(const Device& device, const SwapChain& swapChain, BufferManager& bufferManager, const PipelineManager& pipelines);
+		void initPipeline(const Device& device, const SwapChain& swapChain,const PipelineManager& pipelines);
 	private:
 		std::vector<std::pair<uint32_t, std::shared_ptr<const VertexBuffer>>> _vbos;
 		std::vector<std::pair<uint32_t, std::shared_ptr<const UniformBuffer>>> _uniforms;

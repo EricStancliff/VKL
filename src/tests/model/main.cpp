@@ -78,10 +78,9 @@ VulkanWindow buildWindow(const vkl::Instance& instance, const std::string& title
 
 void updateWindow(VulkanWindow& window)
 {
-	window.manip.process(window.window, window.cam);
 	window.swapChain.prepNextFrame(window.device, window.surface, window.commandDispatcher, window.mainPass, window.window.getWindowSize());
 	window.bufferManager.update(window.device, window.swapChain);
-	window.commandDispatcher.processUnsortedObjects(window.renderObjects, window.pipelineManager, window.mainPass, window.swapChain, window.swapChain.frameBuffer(window.swapChain.frame()), window.swapChain.swapChainExtent());
+	window.commandDispatcher.processUnsortedObjects(window.renderObjects, window.device, window.pipelineManager, window.mainPass, window.swapChain, window.swapChain.frameBuffer(window.swapChain.frame()), window.swapChain.swapChainExtent());
 	window.swapChain.swap(window.device, window.surface, window.commandDispatcher, window.mainPass, window.window.getWindowSize());
 }
 
@@ -92,30 +91,31 @@ int main(int argc, char* argv[])
 
 	VulkanWindow window = buildWindow(instance, "model_vkl");
 
-	//pending updates to reflection and asset mgmt
-	std::shared_ptr<vxt::Model> model = nullptr;
+	vxt::AssetFactory::instance().addSearchPath((std::filesystem::path(VKL_DATA_DIR) / "models").make_preferred().string(), false);
 
+	auto model = vxt::AssetFactory::instance().deviceAsset<vxt::Model>("CesiumMan.glb", window.device, window.swapChain, window.bufferManager);
 
 	if (!model)
 		return -1;
 
 	auto modelObject = std::make_shared<vxt::ModelRenderObject>();
 	modelObject->setModel(window.device, window.swapChain, window.bufferManager, window.pipelineManager, model);
-	
+	for (auto&& shape : modelObject->shapes())
+		window.renderObjects.push_back(shape);
+
+	window.cam.setView(glm::lookAt(glm::vec3{ 5.f,0.f,0.f }, glm::vec3{ 0.f, 0.f, 0.f }, glm::vec3{ 0.f, 1.f, 0.f }));
 
 	while (!window.window.shouldClose())
 	{
 		//TODO - fix this
 		window.window.clearLastFrame();
 		vkl::Window::pollEventsForAllWindows();
-		window.window.updateToThisFrame();
 
+		window.manip.process(window.window, window.cam);
 		modelObject->update(window.device, window.swapChain, window.cam);
 		updateWindow(window);
-		window.window.clearLastFrame();
-		window.window.updateToThisFrame();
 	}
-	window.window.cleanUp();
+	window.cleanUp(instance);
 	instance.cleanUp();
 	vkl::Window::cleanUpWindowSystem();
 }

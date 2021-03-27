@@ -2,6 +2,8 @@
 #include <vkl/Common.h>
 #include <memory>
 #include <vkl/TextureBuffer.h>
+#include <vkl/UniformBuffer.h>
+
 namespace vkl
 {
 	class VKL_EXPORT BufferManager
@@ -14,7 +16,16 @@ namespace vkl
 
 		std::shared_ptr<IndexBuffer> createIndexBuffer(const Device& device, const SwapChain& swapChain);
 		std::shared_ptr<VertexBuffer> createVertexBuffer(const Device& device, const SwapChain& swapChain);
-		std::shared_ptr<TextureBuffer> createTextureBuffer(const Device& device, const SwapChain& swapChain, void* imageData, size_t width, size_t height, size_t components, const TextureOptions& options = {});
+		std::shared_ptr<TextureBuffer> createTextureBuffer(const Device& device, const SwapChain& swapChain, const void* imageData, size_t width, size_t height, size_t components, const TextureOptions& options = {});
+
+		template <typename T>
+		std::shared_ptr<TypedUniform<T>> createTypedUniform(const Device& device, const SwapChain& swapChain)
+		{
+			auto newOne = std::make_shared<TypedUniform<T>>(device, swapChain);
+			_uniformBuffers.emplace_back(newOne);
+			return newOne;
+		}
+
 		std::shared_ptr<UniformBuffer> createUniformBuffer(const Device& device, const SwapChain& swapChain);
 
 		void cleanUp(const Device& device);

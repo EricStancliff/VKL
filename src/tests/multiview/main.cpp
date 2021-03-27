@@ -73,9 +73,9 @@ class ImagePlane : public vkl::RenderObject
 	}
 
 public:
-	void init(const vkl::Device& device, const vkl::SwapChain& swapChain, vkl::BufferManager& bufferManager, const vkl::PipelineManager& pipelines) override
+	ImagePlane() = delete;
+	ImagePlane(const vkl::Device& device, const vkl::SwapChain& swapChain, const vkl::PipelineManager& pipelines, vkl::BufferManager& bufferManager)
 	{
-		vkl::RenderObject::init(device, swapChain, bufferManager, pipelines);
 		auto vbo = bufferManager.createVertexBuffer(device, swapChain);
 
 		_verts.push_back({ glm::vec2(-0.5, -0.5), glm::vec2(0,0) });
@@ -84,7 +84,7 @@ public:
 		_verts.push_back({ glm::vec2(0.5, -0.5), glm::vec2(1,0) });
 
 		vbo->setData(_verts.data(), sizeof(Vertex), _verts.size());
-		addVBO(device, swapChain, vbo, 0);
+		addVBO(vbo, 0);
 
 		auto drawCall = std::make_shared<vkl::DrawCall>();
 
@@ -100,7 +100,7 @@ public:
 
 		drawCall->setIndexBuffer(indexBuffer);
 
-		addDrawCall(device, swapChain, drawCall);
+		addDrawCall(drawCall);
 
 	}
 
@@ -118,7 +118,7 @@ public:
 		if (_imageData)
 		{
 			auto texBuff = bufferManager.createTextureBuffer(device, swapChain, _imageData, (size_t)_width, (size_t)_height, (size_t)_components);
-			addTexture(device, swapChain, texBuff, 1);
+			addTexture(texBuff, 1);
 		}
 		else
 		{
@@ -190,8 +190,7 @@ VulkanWindow buildWindow(const vkl::Instance& instance, const std::string& title
 	vkl::CommandDispatcher commandDispatcher(device, swapChain);
 
 	std::vector<std::shared_ptr<vkl::RenderObject>> renderObjects;
-	auto texPlane = std::make_shared<ImagePlane>();
-	texPlane->init(device, swapChain, bufferManager, pipelineManager);
+	auto texPlane = std::make_shared<ImagePlane>(device, swapChain, pipelineManager, bufferManager);
 	texPlane->setImage(device, swapChain, bufferManager, texture, png);
 	renderObjects.push_back(texPlane);
 
@@ -205,7 +204,7 @@ void updateWindow(VulkanWindow& window)
 {
 	window.swapChain.prepNextFrame(window.device, window.surface, window.commandDispatcher, window.mainPass, window.window.getWindowSize());
 	window.bufferManager.update(window.device, window.swapChain);
-	window.commandDispatcher.processUnsortedObjects(window.renderObjects, window.pipelineManager, window.mainPass, window.swapChain, window.swapChain.frameBuffer(window.swapChain.frame()), window.swapChain.swapChainExtent());
+	window.commandDispatcher.processUnsortedObjects(window.renderObjects, window.device, window.pipelineManager, window.mainPass, window.swapChain, window.swapChain.frameBuffer(window.swapChain.frame()), window.swapChain.swapChainExtent());
 	window.swapChain.swap(window.device, window.surface, window.commandDispatcher, window.mainPass, window.window.getWindowSize());
 }
 
@@ -250,8 +249,6 @@ int main(int argc, char* argv[])
 		window1.window.clearLastFrame();
 		window2.window.clearLastFrame();
 		vkl::Window::pollEventsForAllWindows();
-		window1.window.updateToThisFrame();
-		window2.window.updateToThisFrame();
 	}
 
 	instance.cleanUp();

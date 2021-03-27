@@ -15,7 +15,8 @@ namespace vkl
 		KEY_REPEAT,
 		CHAR,
 		WINDOW_RESIZE,
-		WINDOW_MOVE
+		WINDOW_MOVE,
+		FOCUS
 	};
 
 	enum class MouseButton
@@ -229,5 +230,12 @@ namespace vkl
 
 		int x{ 0 };
 		int y{ 0 };
+	};
+	class FocusEvent : public Event
+	{
+	public:
+		EventType getType() const override { return EventType::FOCUS; }
+
+		bool focused{ false };
 	};
 }

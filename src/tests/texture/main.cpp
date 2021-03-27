@@ -58,7 +58,7 @@ struct Vertex
 class ImagePlane : public vkl::RenderObject
 {
 	PIPELINE_TYPE
-	static void describePipeline(vkl::PipelineDescription& description)
+		static void describePipeline(vkl::PipelineDescription& description)
 	{
 		description.setPrimitiveTopology(VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST);
 
@@ -72,10 +72,9 @@ class ImagePlane : public vkl::RenderObject
 	}
 
 public:
-	void init(const vkl::Device& device, const vkl::SwapChain& swapChain, vkl::BufferManager& bufferManager, const vkl::PipelineManager& pipelines) override
+	ImagePlane() = delete;
+	ImagePlane(const vkl::Device& device, const vkl::SwapChain& swapChain, const vkl::PipelineManager& pipelines, vkl::BufferManager& bufferManager)
 	{
-		vkl::RenderObject::init(device, swapChain, bufferManager, pipelines);
-
 		auto vbo = bufferManager.createVertexBuffer(device, swapChain);
 
 		_verts.push_back({ glm::vec2(-0.5, -0.5), glm::vec2(0,0) });
@@ -84,7 +83,7 @@ public:
 		_verts.push_back({ glm::vec2(0.5, -0.5), glm::vec2(1,0) });
 
 		vbo->setData(_verts.data(), sizeof(Vertex), _verts.size());
-		addVBO(device, swapChain, vbo, 0);
+		addVBO(vbo, 0);
 
 		auto drawCall = std::make_shared<vkl::DrawCall>();
 
@@ -100,23 +99,35 @@ public:
 
 		drawCall->setIndexBuffer(indexBuffer);
 
-		addDrawCall(device, swapChain, drawCall);
+		addDrawCall(drawCall);
 
-		_imageData = vxt::loadJPGData((std::filesystem::path(VKL_DATA_DIR) / "textures" / "texture.jpg").make_preferred().string().c_str(), _width, _height, _components);
+	}
+
+	void setImage(const vkl::Device& device, const vkl::SwapChain& swapChain, vkl::BufferManager& bufferManager, const std::string& path, bool png = false)
+	{
+		if (png)
+		{
+			_imageData = vxt::loadPNGData(path.c_str(), _width, _height, _components);
+		}
+		else
+		{
+			_imageData = vxt::loadJPGData(path.c_str(), _width, _height, _components);
+		}
 
 		if (_imageData)
 		{
 			auto texBuff = bufferManager.createTextureBuffer(device, swapChain, _imageData, (size_t)_width, (size_t)_height, (size_t)_components);
-			addTexture(device, swapChain, texBuff, 1);
+			addTexture(texBuff, 1);
 		}
 		else
 		{
 			std::cerr << "Couldn't load example image!!!";
 		}
 	}
+
 	~ImagePlane()
 	{
-		if(_imageData)
+		if (_imageData)
 			vxt::freeJPGData(_imageData);
 	}
 private:
@@ -152,19 +163,18 @@ int main(int argc, char* argv[])
 	vkl::CommandDispatcher commandDispatcher(device, swapChain);
 
 	std::vector<std::shared_ptr<vkl::RenderObject>> renderObjects;
-	auto imagePlane = std::make_shared<ImagePlane>();
-	imagePlane->init(device, swapChain, bufferManager, pipelineManager);
+	auto imagePlane = std::make_shared<ImagePlane>(device, swapChain, pipelineManager, bufferManager);
+	imagePlane->setImage(device, swapChain, bufferManager, (std::filesystem::path(VKL_DATA_DIR) / "textures" / "texture.jpg").make_preferred().string(), true);
 	renderObjects.push_back(imagePlane);
 
 	while (!window.shouldClose())
 	{
 		swapChain.prepNextFrame(device, surface, commandDispatcher, mainPass, window.getWindowSize());
 		bufferManager.update(device, swapChain);
-		commandDispatcher.processUnsortedObjects(renderObjects, pipelineManager, mainPass, swapChain, swapChain.frameBuffer(swapChain.frame()), swapChain.swapChainExtent());
+		commandDispatcher.processUnsortedObjects(renderObjects, device, pipelineManager, mainPass, swapChain, swapChain.frameBuffer(swapChain.frame()), swapChain.swapChainExtent());
 		swapChain.swap(device, surface, commandDispatcher, mainPass, window.getWindowSize());
 		window.clearLastFrame();
 		vkl::Window::pollEventsForAllWindows();
-		window.updateToThisFrame();
 	}
 
 	device.waitIdle();

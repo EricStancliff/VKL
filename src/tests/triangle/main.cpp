@@ -67,11 +67,8 @@ class Triangle : public vkl::RenderObject
 	}
 
 public:
-	void init(const vkl::Device& device, const vkl::SwapChain& swapChain, vkl::BufferManager& bufferManager, const vkl::PipelineManager& pipelines) override
+	Triangle(const vkl::Device& device, const vkl::SwapChain& swapChain, const vkl::PipelineManager& pipelines, vkl::BufferManager& bufferManager)
 	{
-		vkl::RenderObject::init(device, swapChain, bufferManager, pipelines);
-		init(device, swapChain, bufferManager, pipelines);  
-
 		auto vbo = bufferManager.createVertexBuffer(device, swapChain);
 
 		_verts.push_back({ glm::vec2(0.0, -0.5), glm::vec3(1,0,0) });
@@ -79,7 +76,7 @@ public:
 		_verts.push_back({ glm::vec2(0.5, 0.5), glm::vec3(0,0,1) });
 
 		vbo->setData(_verts.data(), sizeof(Vertex), _verts.size());
-		addVBO(device, swapChain, vbo, 0);
+		addVBO(vbo, 0);
 
 		auto drawCall = std::make_shared<vkl::DrawCall>();
 		drawCall->setCount(3);
@@ -92,7 +89,7 @@ public:
 		
 		drawCall->setIndexBuffer(indexBuffer);
 
-		addDrawCall(device, swapChain, drawCall);
+		addDrawCall(drawCall);
 	}
 
 private:
@@ -126,19 +123,17 @@ int main(int argc, char* argv[])
 	vkl::CommandDispatcher commandDispatcher(device, swapChain);
 
 	std::vector<std::shared_ptr<vkl::RenderObject>> renderObjects;
-	auto triangle = std::make_shared<Triangle>();
-	triangle->init(device, swapChain, bufferManager, pipelineManager);
+	auto triangle = std::make_shared<Triangle>(device, swapChain, pipelineManager, bufferManager);
 	renderObjects.push_back(triangle);
 
 	while (!window.shouldClose())
 	{
 		swapChain.prepNextFrame(device, surface, commandDispatcher, mainPass, window.getWindowSize());
 		bufferManager.update(device, swapChain);
-		commandDispatcher.processUnsortedObjects(renderObjects, pipelineManager, mainPass, swapChain, swapChain.frameBuffer(swapChain.frame()), swapChain.swapChainExtent());
+		commandDispatcher.processUnsortedObjects(renderObjects, device, pipelineManager, mainPass, swapChain, swapChain.frameBuffer(swapChain.frame()), swapChain.swapChainExtent());
 		swapChain.swap(device, surface, commandDispatcher, mainPass, window.getWindowSize());
 		window.clearLastFrame();
 		vkl::Window::pollEventsForAllWindows();
-		window.updateToThisFrame();
 	}
 
 	device.waitIdle();

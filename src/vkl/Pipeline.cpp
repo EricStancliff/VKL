@@ -408,6 +408,15 @@ namespace vkl
 		pipelineLayoutInfo.setLayoutCount = 1;
 		pipelineLayoutInfo.pSetLayouts = &_descriptorSetLayout;
 
+		VkPushConstantRange pushConstantRange{};
+		if (description.pushConstant().hasPushConstant)
+		{
+			pushConstantRange.stageFlags = VK_SHADER_STAGE_ALL_GRAPHICS;
+			pushConstantRange.offset = 0;
+			pushConstantRange.size = (uint32_t)description.pushConstant().size;
+			pipelineLayoutInfo.pPushConstantRanges = &pushConstantRange;
+		}
+
 		if (vkCreatePipelineLayout(device.handle(), &pipelineLayoutInfo, nullptr, &_pipelineLayout) != VK_SUCCESS) {
 			throw std::runtime_error("Error");
 		}
