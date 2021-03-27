@@ -51,6 +51,40 @@ namespace vkl
 			}
 
 		private:
-			T _ourData;
+			T _ourData{};
 	};
+
+		class PushConstantBase
+		{
+		public:
+			virtual void* data() const = 0;
+			virtual size_t size() const = 0;
+		};
+
+		template <typename T>
+		class PushConstant : public PushConstantBase
+		{
+		public:
+			void setData(const T& data)
+			{
+				_ourData = data;
+			}
+
+			void* data() const override
+			{
+				return (void*)&_ourData;
+			}
+
+			size_t size() const override
+			{
+				return sizeof(T);
+			}
+
+			T& typedData()
+			{
+				return _ourData;
+			}
+		private:
+			T _ourData{};
+		};
 }

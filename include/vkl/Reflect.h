@@ -31,4 +31,10 @@ namespace reflect
 	{
 		typeDictionary().forAllTypesDerivedFrom(typeDictionary().indexOf<T>(), f);
 	}
+
+	template <typename T>
+	std::shared_ptr<T> createShared()
+	{
+		return std::shared_ptr<T>(reflect<T>().create());
+	}
 }

@@ -2,15 +2,21 @@
 
 set(vxt_source
 	./Camera.cpp
-	./CameraManip.cpp
+	./FirstPersonManip.cpp
+	./ModelRenderObject.cpp
+	./glTFModel.cpp
 	./PNGLoader.cpp
 	)
 
 set(vkl_include_dir ${CMAKE_SOURCE_DIR}/include)
 set(vxt_includes
 	${vkl_include_dir}/vxt/Camera.h
+	${vkl_include_dir}/vxt/CameraManip.h
+	${vkl_include_dir}/vxt/FirstPersonManip.h
 	${vkl_include_dir}/vxt/PNGLoader.h
 	${vkl_include_dir}/vxt/LinearAlgebra.h
+	${vkl_include_dir}/vxt/Model.h
+	${vkl_include_dir}/vxt/ModelRenderObject.h
 	${vkl_include_dir}/vxt/VXT_EXPORT.h
 	${vkl_include_dir}/vxt/PNGLoader.h
 	)

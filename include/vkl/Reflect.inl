@@ -120,6 +120,11 @@ namespace reflect
 		}
 	};
 
+	class object;
+	class type_dictionary;
+
+	using ConstructFunc = object* (*)(void);
+
 	class VKL_EXPORT reflection
 	{
 	public:
@@ -129,9 +134,18 @@ namespace reflect
 		reflection_data_base* data;
 		size_t parent = 0;
 		std::vector<size_t> children;
+
+		object* create() const {
+			if (!_create)
+				return nullptr;
+			return _create();
+		}
+
+	private:
+		friend type_dictionary;
+		ConstructFunc _create = nullptr;
 	};
 
-	class type_dictionary;
 
 	VKL_EXPORT std::unordered_map<std::type_index, size_t>& typed_indexer();
 
@@ -155,6 +169,7 @@ namespace reflect
 			info.index = index;
 			info.className = name;
 			info.data = new typename T::reflection_data();
+			info._create = reinterpret_cast<ConstructFunc>(T::create);
 
 			//take in reflection data
 			T::populateReflection(*static_cast<typename T::reflection_data*>(info.data));
@@ -217,6 +232,7 @@ using reflection_data = reflection_type;\
 virtual const reflect::reflection_data_base& reflectionInfo() const override {\
 return *reflect::typeDictionary().getType<type>().data;\
 }\
+static type* create() { return new type();} \
 private:\
 friend class reflect::type_dictionary;\
 static bool reflection_initialized();\
@@ -232,3 +248,21 @@ return initialized;\
 }\
 bool type::_reflection_initialized = type::reflection_initialized();
 
+#define REFLECTED_TYPE_ABSTRACT(type, parent, reflection_type)\
+public:\
+using reflection_parent = parent;\
+virtual const reflect::reflection& reflect() const override{\
+return reflect::typeDictionary().getType<type>();\
+}\
+virtual const reflect::reflection& reflectParent() const override{\
+return reflect::typeDictionary().getType<parent>();\
+}\
+using reflection_data = reflection_type;\
+virtual const reflect::reflection_data_base& reflectionInfo() const override {\
+return *reflect::typeDictionary().getType<type>().data;\
+}\
+static type* create() { return nullptr;} \
+private:\
+friend class reflect::type_dictionary;\
+static bool reflection_initialized();\
+static bool _reflection_initialized;

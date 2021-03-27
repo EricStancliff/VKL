@@ -16,11 +16,6 @@ namespace vkl
 		reflection.setAbstract(true);
 	}
 
-
-	RenderObject::RenderObject(const Device& device, const SwapChain& swapChain, BufferManager& bufferManager, const PipelineManager& pipelines)
-	{
-	}
-
 	void RenderObject::recordCommands(const SwapChain& swapChain, const PipelineManager& pipelines, VkCommandBuffer buffer, const VkExtent2D& extent)
 	{
 		const Pipeline* pipeline = pipelines.pipelineForType(this->reflect().index);
@@ -71,14 +66,14 @@ namespace vkl
 		return static_cast<const RenderObjectDescription*>(reflect().data)->pipelineDescription();
 	}
 
-	void RenderObject::addVBO(const Device& device, const SwapChain& swapChain, std::shared_ptr<VertexBuffer> vbo, uint32_t binding)
+	void RenderObject::addVBO(const Device& device, const SwapChain& swapChain, std::shared_ptr<const VertexBuffer> vbo, uint32_t binding)
 	{
 		_vbos.push_back({ binding, vbo });
 		std::sort(_vbos.begin(), _vbos.end(), [](const auto& lhs, const auto& rhs) {
 			return lhs.first < rhs.first;
 			});
 	}
-	void RenderObject::addUniform(const Device& device, const SwapChain& swapChain, std::shared_ptr<UniformBuffer> uniform, uint32_t binding)
+	void RenderObject::addUniform(const Device& device, const SwapChain& swapChain, std::shared_ptr<const UniformBuffer> uniform, uint32_t binding)
 	{
 		for (int i = 0; i < swapChain.framesInFlight(); ++i)
 		{
@@ -105,7 +100,7 @@ namespace vkl
 			});
 
 	}
-	void RenderObject::addTexture(const Device& device, const SwapChain& swapChain, std::shared_ptr<TextureBuffer> texture, uint32_t binding)
+	void RenderObject::addTexture(const Device& device, const SwapChain& swapChain, std::shared_ptr<const TextureBuffer> texture, uint32_t binding)
 	{
 		for (int i = 0; i < swapChain.framesInFlight(); ++i)
 		{
@@ -133,11 +128,27 @@ namespace vkl
 			});
 
 	}
-	void RenderObject::addDrawCall(const Device& device, const SwapChain& swapChain, std::shared_ptr<DrawCall> draw)
+	void RenderObject::addDrawCall(const Device& device, const SwapChain& swapChain, std::shared_ptr<const DrawCall> draw)
 	{
 		_drawCalls.push_back(draw);
 	}
+	void RenderObject::setPushConstant(std::shared_ptr<const PushConstantBase> pc)
+	{
+		_pushConstant = pc;
+	}
+	void RenderObject::reset()
+	{
+		_textures.clear();
+		_pushConstant = nullptr;
+		_drawCalls.clear();
+		_vbos.clear();
+		_uniforms.clear();
+	}
 	void RenderObject::init(const Device& device, const SwapChain& swapChain, BufferManager& bufferManager, const PipelineManager& pipelines)
+	{
+		initPipeline(device, swapChain, bufferManager, pipelines);
+	}
+	void RenderObject::initPipeline(const Device& device, const SwapChain& swapChain, BufferManager& bufferManager, const PipelineManager& pipelines)
 	{
 		auto pipeline = pipelines.pipelineForType(reflect::reflect(this).index);
 		if (!pipeline)

@@ -32,6 +32,8 @@ namespace vkl
     class IndexBuffer;
     class RenderObject;
     class CommandDispatcher;
+    class BufferManager;
+    class PushConstantBase;
 
     struct WindowSize
     {

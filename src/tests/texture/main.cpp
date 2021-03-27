@@ -70,9 +70,9 @@ class ImagePlane : public vkl::RenderObject
 	}
 
 public:
-	ImagePlane(const vkl::Device& device, const vkl::SwapChain& swapChain, vkl::BufferManager& bufferManager, const vkl::PipelineManager& pipelines) : vkl::RenderObject(device, swapChain, bufferManager, pipelines)
+	void init(const vkl::Device& device, const vkl::SwapChain& swapChain, vkl::BufferManager& bufferManager, const vkl::PipelineManager& pipelines) override
 	{
-		init(device, swapChain, bufferManager, pipelines);  
+		vkl::RenderObject::init(device, swapChain, bufferManager, pipelines);
 
 		auto vbo = bufferManager.createVertexBuffer(device, swapChain);
 
@@ -150,7 +150,9 @@ int main(int argc, char* argv[])
 	vkl::CommandDispatcher commandDispatcher(device, swapChain);
 
 	std::vector<std::shared_ptr<vkl::RenderObject>> renderObjects;
-	renderObjects.push_back(std::make_shared<ImagePlane>(device, swapChain, bufferManager, pipelineManager));
+	auto imagePlane = std::make_shared<ImagePlane>();
+	imagePlane->init(device, swapChain, bufferManager, pipelineManager);
+	renderObjects.push_back(imagePlane);
 
 	while (!window.shouldClose())
 	{
@@ -158,7 +160,9 @@ int main(int argc, char* argv[])
 		bufferManager.update(device, swapChain);
 		commandDispatcher.processUnsortedObjects(renderObjects, pipelineManager, mainPass, swapChain, swapChain.frameBuffer(swapChain.frame()), swapChain.swapChainExtent());
 		swapChain.swap(device, surface, commandDispatcher, mainPass, window.getWindowSize());
-		window.pollEvents();
+		window.clearLastFrame();
+		vkl::Window::pollEventsForAllWindows();
+		window.updateToThisFrame();
 	}
 
 	device.waitIdle();

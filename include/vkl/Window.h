@@ -6,6 +6,7 @@ namespace vkl
 {
 	class Instance;
 	class Surface;
+	class Event;
 
 	struct WindowData;
 
@@ -31,11 +32,23 @@ namespace vkl
 
 		bool shouldClose() const;
 
-		static void pollEvents();
+		//poll once for all windows, then update each one
+		void clearLastFrame();
+		static void pollEventsForAllWindows();
+		void updateToThisFrame();
+
+		std::span<std::unique_ptr<const Event>> events() const;
 
 		void cleanUp();
 
 		static void cleanUpWindowSystem();
+
+		bool isFocused() const;
+		int width() const;
+		int height() const;
+		int x() const;
+		int y() const;
+
 
 	private:
 		friend class Surface;

@@ -28,6 +28,7 @@ set(vkl_includes
 	${vkl_include_dir}/vkl/Common.h
 	${vkl_include_dir}/vkl/Device.h
 	${vkl_include_dir}/vkl/DrawCall.h
+	${vkl_include_dir}/vkl/Event.h
 	${vkl_include_dir}/vkl/IndexBuffer.h
 	${vkl_include_dir}/vkl/Instance.h
 	${vkl_include_dir}/vkl/Pipeline.h

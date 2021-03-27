@@ -29,6 +29,7 @@ InstallExternal(glm)
 InstallExternal(glfw3)
 InstallExternal_Ext(vulkan-memory-allocator unofficial-vulkan-memory-allocator)
 InstallExternalNoFind(stb)
+InstallExternalNoFind(tinygltf)
 
 #InstallExternal_Ext(shaderc glslang)
 

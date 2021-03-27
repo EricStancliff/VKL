@@ -71,10 +71,9 @@ class ImagePlane : public vkl::RenderObject
 	}
 
 public:
-	ImagePlane(const vkl::Device& device, const vkl::SwapChain& swapChain, vkl::BufferManager& bufferManager, const vkl::PipelineManager& pipelines) : vkl::RenderObject(device, swapChain, bufferManager, pipelines)
+	void init(const vkl::Device& device, const vkl::SwapChain& swapChain, vkl::BufferManager& bufferManager, const vkl::PipelineManager& pipelines) override
 	{
-		init(device, swapChain, bufferManager, pipelines);  
-
+		vkl::RenderObject::init(device, swapChain, bufferManager, pipelines);
 		auto vbo = bufferManager.createVertexBuffer(device, swapChain);
 
 		_verts.push_back({ glm::vec2(-0.5, -0.5), glm::vec2(0,0) });
@@ -189,7 +188,8 @@ VulkanWindow buildWindow(const vkl::Instance& instance, const std::string& title
 	vkl::CommandDispatcher commandDispatcher(device, swapChain);
 
 	std::vector<std::shared_ptr<vkl::RenderObject>> renderObjects;
-	auto texPlane = std::make_shared<ImagePlane>(device, swapChain, bufferManager, pipelineManager);
+	auto texPlane = std::make_shared<ImagePlane>();
+	texPlane->init(device, swapChain, bufferManager, pipelineManager);
 	texPlane->setImage(device, swapChain, bufferManager, texture, png);
 	renderObjects.push_back(texPlane);
 
@@ -245,7 +245,11 @@ int main(int argc, char* argv[])
 			}
 		}
 
-		vkl::Window::pollEvents();
+		window1.window.clearLastFrame();
+		window2.window.clearLastFrame();
+		vkl::Window::pollEventsForAllWindows();
+		window1.window.updateToThisFrame();
+		window2.window.updateToThisFrame();
 	}
 
 	instance.cleanUp();

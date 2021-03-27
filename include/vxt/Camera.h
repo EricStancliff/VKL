@@ -1,13 +1,13 @@
 #pragma once
 
 #include <vxt/LinearAlgebra.h>
-#include <vxt/Camera.h>
 
 namespace vxt
 {
 
 	class Camera
 	{
+	public:
 		Camera() = default;
 		~Camera() = default;
 		Camera(const Camera&) = delete;
