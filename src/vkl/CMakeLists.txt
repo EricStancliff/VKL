@@ -9,7 +9,7 @@ set(vkl_source
 	./Instance.cpp
 	./IndexBuffer.cpp
 	./Pipeline.cpp
-	./Reflect.cpp
+	./PipelineFactory.cpp
 	./RenderObject.cpp
 	./RenderPass.cpp
 	./Shader.cpp
@@ -32,8 +32,7 @@ set(vkl_includes
 	${vkl_include_dir}/vkl/IndexBuffer.h
 	${vkl_include_dir}/vkl/Instance.h
 	${vkl_include_dir}/vkl/Pipeline.h
-	${vkl_include_dir}/vkl/Reflect.h
-	${vkl_include_dir}/vkl/Reflect.inl
+	${vkl_include_dir}/vkl/PipelineFactory.h
 	${vkl_include_dir}/vkl/RenderObject.h
 	${vkl_include_dir}/vkl/RenderPass.h
 	${vkl_include_dir}/vkl/Shader.h
@@ -58,7 +57,7 @@ endif()
 
 target_link_libraries(vkl PUBLIC unofficial::vulkan-memory-allocator::vulkan-memory-allocator glfw Vulkan::Vulkan ${SHADERC_LIB} glm)
 
-target_compile_definitions(vkl PRIVATE VKL_LIB -DVKL_DATA_DIR="${VKL_DATA_DIR}")
+target_compile_definitions(vkl PRIVATE VKL_LIB)
 target_include_directories(vkl PUBLIC ${vkl_include_dir} ${Vulkan_INCLUDE_DIR} "${EXTERNAL_DIR}/include" PRIVATE )
 
 

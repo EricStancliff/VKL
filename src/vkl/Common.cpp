@@ -12,24 +12,6 @@
 
 namespace vkl
 {
-
-	std::string& _vklDataDir()
-	{
-		static std::string vklDir = VKL_DATA_DIR;
-		return vklDir;
-	}
-
-	std::string vklDataDir()
-	{
-		return _vklDataDir();
-	}
-
-	void setVklDataDir(const std::string& dataDir)
-	{
-		_vklDataDir() = dataDir;
-	}
-
-
 	std::span<const char* const> getVklDeviceExtensions()
 	{
 		static const std::vector<const char*> deviceExtensions = {

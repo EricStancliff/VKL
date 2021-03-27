@@ -46,21 +46,23 @@ void main() {
 
 }
 
+REGISTER_PIPELINE(vxt::ModelShapeObject, vxt::ModelShapeObject::describePipeline)
+
 namespace vxt
 {
-	void ModelShapeObject::populateReflection(vkl::RenderObjectDescription& reflection)
+	void ModelShapeObject::describePipeline(vkl::PipelineDescription& description)
 	{
-		reflection.pipelineDescription().setPrimitiveTopology(VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST);
+		description.setPrimitiveTopology(VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST);
 
-		reflection.pipelineDescription().addShaderGLSL(VK_SHADER_STAGE_VERTEX_BIT, VertShader);
-		reflection.pipelineDescription().addShaderGLSL(VK_SHADER_STAGE_FRAGMENT_BIT, FragShader);
+		description.addShaderGLSL(VK_SHADER_STAGE_VERTEX_BIT, VertShader);
+		description.addShaderGLSL(VK_SHADER_STAGE_FRAGMENT_BIT, FragShader);
 
-		reflection.pipelineDescription().declareVertexAttribute(0, 0, VK_FORMAT_R32G32B32_SFLOAT, sizeof(Model::Vertex), offsetof(Model::Vertex, pos));
-		reflection.pipelineDescription().declareVertexAttribute(0, 1, VK_FORMAT_R32G32B32_SFLOAT, sizeof(Model::Vertex), offsetof(Model::Vertex, normal));
-		reflection.pipelineDescription().declareVertexAttribute(0, 2, VK_FORMAT_R32G32_SFLOAT, sizeof(Model::Vertex), offsetof(Model::Vertex, uv0));
+		description.declareVertexAttribute(0, 0, VK_FORMAT_R32G32B32_SFLOAT, sizeof(Model::Vertex), offsetof(Model::Vertex, pos));
+		description.declareVertexAttribute(0, 1, VK_FORMAT_R32G32B32_SFLOAT, sizeof(Model::Vertex), offsetof(Model::Vertex, normal));
+		description.declareVertexAttribute(0, 2, VK_FORMAT_R32G32_SFLOAT, sizeof(Model::Vertex), offsetof(Model::Vertex, uv0));
 
-		reflection.pipelineDescription().declareTexture(1);
-		reflection.pipelineDescription().declarePushConstant(sizeof(MVP));
+		description.declareTexture(1);
+		description.declarePushConstant(sizeof(MVP));
 	}
 
 	void ModelShapeObject::init(const vkl::Device& device, const vkl::SwapChain& swapChain, vkl::BufferManager& bufferManager, const vkl::PipelineManager& pipelines)
@@ -148,5 +150,3 @@ namespace vxt
 	}
 
 }
-
-IMPL_REFLECTION(vxt::ModelShapeObject)

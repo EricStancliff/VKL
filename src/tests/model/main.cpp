@@ -95,16 +95,6 @@ int main(int argc, char* argv[])
 	//pending updates to reflection and asset mgmt
 	std::shared_ptr<vxt::Model> model = nullptr;
 
-	reflect::forAllTypesDerivedFrom<vxt::Model>([&](const reflect::reflection& reflection) {
-		if (reflection.className == "vxt::glTFModel")
-		{
-			model = std::shared_ptr<vxt::Model>(dynamic_cast<vxt::Model*>(reflection.create()));
-			if (model)
-			{
-				model->init((std::filesystem::path(vkl::vklDataDir()) / "models" / "CesiumMan.glb").make_preferred().string(), window.device, window.swapChain, window.bufferManager);
-			}
-		}
-		});
 
 	if (!model)
 		return -1;

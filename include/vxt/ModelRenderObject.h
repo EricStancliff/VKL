@@ -5,6 +5,7 @@
 #include <vkl/RenderObject.h>  
 #include <vkl/UniformBuffer.h>
 #include <vxt/VXT_EXPORT.h>
+#include <vkl/PipelineFactory.h>
 
 namespace vxt
 {
@@ -12,9 +13,10 @@ namespace vxt
 
 	class VXT_EXPORT ModelShapeObject : public vkl::RenderObject
 	{
-		REFLECTED_TYPE(ModelShapeObject, vkl::RenderObject)
-		static void populateReflection(vkl::RenderObjectDescription& reflection);
+		PIPELINE_TYPE
 	public:
+		static void describePipeline(vkl::PipelineDescription& description);
+
 		ModelShapeObject() = default;
 		virtual void init(const vkl::Device& device, const vkl::SwapChain& swapChain, vkl::BufferManager& bufferManager, const vkl::PipelineManager& pipelines) override;
 		~ModelShapeObject() = default;

@@ -56,10 +56,6 @@ namespace vkl
         std::vector<VkPresentModeKHR> presentModes;
     };
 
-    VKL_EXPORT std::string vklDataDir();
-
-    VKL_EXPORT void setVklDataDir(const std::string& dataDir);
-
     VKL_EXPORT QueueFamilyIndices findQueueFamilies(VkPhysicalDevice device, VkSurfaceKHR surface);
 
     VKL_EXPORT bool checkDeviceExtensionSupport(VkPhysicalDevice device);

@@ -3,6 +3,7 @@
 #include <vkl/Common.h>
 
 #include <filesystem>
+#include <typeindex>
 
 namespace vkl
 {
@@ -83,7 +84,7 @@ namespace vkl
 	{
 	public:
 		Pipeline() = delete;
-		Pipeline(const Device& device, const SwapChain& swapChain, const PipelineDescription& description, const RenderPass& renderPass, size_t typeIndex);
+		Pipeline(const Device& device, const SwapChain& swapChain, const PipelineDescription& description, const RenderPass& renderPass, std::type_index typeIndex);
 		Pipeline(const Pipeline&) = delete;
 		Pipeline(Pipeline&&) noexcept = default;
 		Pipeline& operator=(Pipeline&&) noexcept = default;
@@ -95,7 +96,7 @@ namespace vkl
 		VkDescriptorPool descriptorPoolHandle() const;
 		VkPipelineLayout pipelineLayoutHandle() const;
 
-		size_t type() const;
+		std::type_index type() const;
 
 		void cleanUp(const Device& device);
 
@@ -108,26 +109,8 @@ namespace vkl
 		VkPipelineLayout _pipelineLayout{ VK_NULL_HANDLE };
 		VkDescriptorSetLayout _descriptorSetLayout{ VK_NULL_HANDLE };
 		VkDescriptorPool _descriptorPool{ VK_NULL_HANDLE };
-		size_t _type{ 0 };
+		std::type_index _type;
 	};
 	/*****************************************************************************************************************/
 
-	class VKL_EXPORT PipelineManager
-	{
-	public:
-		PipelineManager() = delete;
-		~PipelineManager() = default;
-		PipelineManager(const PipelineManager&) = delete;
-		PipelineManager(PipelineManager&&) noexcept = default;
-		PipelineManager& operator=(PipelineManager&&) noexcept = default;
-		PipelineManager& operator=(const PipelineManager&) = delete;
-
-		PipelineManager(const Device& device, const SwapChain& swapChain, const RenderPass& renderPass);
-
-		const Pipeline* pipelineForType(size_t type) const;
-
-		void cleanUp(const Device& device);
-	private:
-		std::vector<Pipeline> _pipelines;
-	};
 }

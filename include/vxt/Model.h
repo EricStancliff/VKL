@@ -14,14 +14,12 @@ https://github.com/SaschaWillems/Vulkan-glTF-PBR
 #include <vkl/TextureBuffer.h>
 #include <memory>
 #include <vkl/DrawCall.h>
-#include <vkl/Reflect.h>
+#include <vxt/AssetFactory.h>
 
 namespace vxt
 {
-	class Model : public reflect::object
+	class VXT_EXPORT Model : public DeviceAsset
 	{
-		REFLECTED_TYPE_ABSTRACT(Model, reflect::object, reflect::reflection_data_base)
-		static void populateReflection(reflect::reflection_data_base& reflection) {}
 	public:
 
 		struct Material {
@@ -79,8 +77,6 @@ namespace vxt
 		Model(Model&&) noexcept = default;
 		Model& operator=(Model&&) noexcept = default;
 		Model& operator=(const Model&) = delete;
-
-		virtual void init(const std::string& file, const vkl::Device& device, const vkl::SwapChain& swapChain, vkl::BufferManager& bufferManager) = 0;
 
 		virtual std::span<const Vertex> getVerts() const = 0;
 		virtual std::shared_ptr<const vkl::VertexBuffer> getVertexBuffer() const = 0;

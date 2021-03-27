@@ -1,46 +1,21 @@
 #pragma once
 #include <vkl/Common.h>
-#include <vkl/Reflect.h>
 #include <vkl/Pipeline.h>
 
 namespace vkl
 {
 	class BufferManager;
+	class PipelineManager;
 
-	class VKL_EXPORT RenderObjectDescription : public reflect::reflection_data_base
+	class VKL_EXPORT RenderObject
 	{
-	public:
-		PipelineDescription& pipelineDescription() {
-			return _pipeline;
-		}
-		const PipelineDescription& pipelineDescription() const {
-			return _pipeline;
-		}
-
-		void setAbstract(bool a)
-		{
-			_abstract = a;
-		}
-		bool isAbstract() const
-		{
-			return _abstract;
-		}
-	private:
-		PipelineDescription _pipeline;
-		bool _abstract{ false };
-	};
-
-	class VKL_EXPORT RenderObject : public reflect::object
-	{
-		REFLECTED_TYPE_CUSTOM(RenderObject, reflect::object, RenderObjectDescription)
-		static void populateReflection(RenderObjectDescription& reflection);
 	public:
 		RenderObject() = default;
 		virtual void init(const Device& device, const SwapChain& swapChain, BufferManager& bufferManager, const PipelineManager& pipelines);
 
 		virtual void recordCommands(const SwapChain& swapChain, const PipelineManager& pipelines, VkCommandBuffer buffer, const VkExtent2D& extent);
 
-		const PipelineDescription& pipelineDescription() const;
+		std::shared_ptr<const PipelineDescription> pipelineDescription() const;
 	protected:
 		void addVBO(const Device& device, const SwapChain& swapChain, std::shared_ptr<const VertexBuffer> vbo, uint32_t binding);
 		void addUniform(const Device& device, const SwapChain& swapChain, std::shared_ptr<const UniformBuffer> uniform, uint32_t binding);

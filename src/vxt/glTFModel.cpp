@@ -25,6 +25,9 @@ https://github.com/SaschaWillems/Vulkan-glTF-PBR
 #include <vkl/VertexBuffer.h>
 #include <vkl/IndexBuffer.h>
 
+#include <vxt/AssetFactory.h>
+#include <vxt/VXT_EXPORT.h>
+
 //helpers fro later versions
 namespace tinygltf
 {
@@ -61,6 +64,44 @@ namespace tinygltf
 
 namespace vxt
 {
+	class VXT_EXPORT glTFModelFile : public FileAsset
+	{
+	public:
+		virtual bool processFile(std::string_view file)
+		{
+			std::filesystem::path path;
+			if (!AssetFactory::instance().resolveAbsoloutePath(file, path))
+				return false;
+
+			tinygltf::TinyGLTF gltfContext;
+
+			std::string error;
+			std::string warning;
+
+			bool binary = false;
+			size_t extpos = file.rfind('.', file.length());
+			if (extpos != std::string::npos) {
+				binary = (file.substr(extpos + 1, file.length() - extpos) == "glb");
+			}
+
+			bool fileLoaded = binary ? gltfContext.LoadBinaryFromFile(&gltfModel, &error, &warning, path.string().c_str()) : gltfContext.LoadASCIIFromFile(&gltfModel, &error, &warning, path.string().c_str());
+
+			if (!warning.empty())
+			{
+				std::cout << "Could not load gltf file: " << warning << std::endl;
+			}
+
+			if (!fileLoaded) {
+				std::cerr << "Could not load gltf file: " << error << std::endl;
+				return false;
+			}
+
+			return true;
+		}
+
+		tinygltf::Model gltfModel;
+	};
+
 
 	VkSamplerAddressMode getVkWrapMode(int32_t wrapMode)
 	{
@@ -94,10 +135,8 @@ namespace vxt
 		return VK_FILTER_LINEAR;
 	}
 
-	class glTFModel : public Model
+	class VXT_EXPORT glTFModel : public Model
 	{
-		REFLECTED_TYPE(glTFModel, Model)
-		static void populateReflection(reflect::reflection_data_base& reflection) {}
 	public:
 		glTFModel() = default;
 		virtual ~glTFModel() = default;
@@ -114,35 +153,13 @@ namespace vxt
 			glm::mat4 mat{ glm::identity<glm::mat4>() };
 		};
 
-	protected:
-		void init(const std::string& file, const vkl::Device& device, const vkl::SwapChain& swapChain, vkl::BufferManager& bufferManager) override {
-
-			tinygltf::Model gltfModel;
-			tinygltf::TinyGLTF gltfContext;
-
-			std::string error;
-			std::string warning;
-
-			bool binary = false;
-			size_t extpos = file.rfind('.', file.length());
-			if (extpos != std::string::npos) {
-				binary = (file.substr(extpos + 1, file.length() - extpos) == "glb");
-			}
-
-			bool fileLoaded = binary ? gltfContext.LoadBinaryFromFile(&gltfModel, &error, &warning, file.c_str()) : gltfContext.LoadASCIIFromFile(&gltfModel, &error, &warning, file.c_str());
-
-			if (!warning.empty())
-			{
-				std::cout << "Could not load gltf file: " << warning << std::endl;
-			}
-
-			if (fileLoaded) {
-
-			}
-			else {
-				std::cerr << "Could not load gltf file: " << error << std::endl;
-				return;
-			}
+		bool buildAsset(std::shared_ptr<const FileAsset> fileAsset, const vkl::Device& device, const vkl::SwapChain& swapChain, vkl::BufferManager& bufferManager) override {
+			
+			auto glAsset = std::dynamic_pointer_cast<const glTFModelFile>(fileAsset);
+			if (!glAsset)
+				return false;
+			
+			auto& gltfModel = glAsset->gltfModel;
 
 			_nodeParents.resize(gltfModel.nodes.size());
 			_nodeTransforms.resize(gltfModel.nodes.size());
@@ -161,11 +178,14 @@ namespace vxt
 			_indexBuffer = bufferManager.createIndexBuffer(device, swapChain);
 			_indexBuffer->setData(_indices);
 		
+			return true;
 		}
 
-		void loadTextures(tinygltf::Model& gltfModel, const vkl::Device& device, const vkl::SwapChain& swapChain, vkl::BufferManager& bufferManager)
+	protected:
+
+		void loadTextures(const tinygltf::Model& gltfModel, const vkl::Device& device, const vkl::SwapChain& swapChain, vkl::BufferManager& bufferManager)
 		{
-			for (tinygltf::Texture& tex : gltfModel.textures) {
+			for (const tinygltf::Texture& tex : gltfModel.textures) {
 				tinygltf::Image gltfimage = gltfModel.images[tex.source];
 
 				vkl::TextureOptions options{};
@@ -208,9 +228,9 @@ namespace vxt
 			}
 		}
 
-		void loadTextureSamplers(tinygltf::Model& gltfModel)
+		void loadTextureSamplers(const tinygltf::Model& gltfModel)
 		{
-			for (tinygltf::Sampler smpl : gltfModel.samplers) {
+			for (const tinygltf::Sampler& smpl : gltfModel.samplers) {
 				vkl::TextureOptions options{};
 				options.minFilter = getVkFilterMode(smpl.minFilter);
 				options.magFilter = getVkFilterMode(smpl.magFilter);
@@ -222,41 +242,41 @@ namespace vxt
 		}
 
 
-		void loadMaterials(tinygltf::Model& gltfModel)
+		void loadMaterials(const tinygltf::Model& gltfModel)
 		{
-			for (tinygltf::Material& mat : gltfModel.materials) {
+			for (const tinygltf::Material& mat : gltfModel.materials) {
 				Model::Material material;
-				if (mat.values.find("baseColorTexture") != mat.values.end()) {
-					material.baseColorTexture = _textureBuffers[mat.values["baseColorTexture"].TextureIndex()];
-					material.texCoordSets.baseColor = mat.values["baseColorTexture"].TextureTexCoord();
+				if (auto find = mat.values.find("baseColorTexture"); find != mat.values.end()) {
+					material.baseColorTexture = _textureBuffers[find->second.TextureIndex()];
+					material.texCoordSets.baseColor = find->second.TextureTexCoord();
 				}
-				if (mat.values.find("metallicRoughnessTexture") != mat.values.end()) {
-					material.metallicRoughnessTexture = _textureBuffers[mat.values["metallicRoughnessTexture"].TextureIndex()];
-					material.texCoordSets.metallicRoughness = mat.values["metallicRoughnessTexture"].TextureTexCoord();
+				if (auto find = mat.values.find("metallicRoughnessTexture"); find != mat.values.end()) {
+					material.metallicRoughnessTexture = _textureBuffers[find->second.TextureIndex()];
+					material.texCoordSets.metallicRoughness = find->second.TextureTexCoord();
 				}
-				if (mat.values.find("roughnessFactor") != mat.values.end()) {
-					material.roughnessFactor = static_cast<float>(mat.values["roughnessFactor"].Factor());
+				if (auto find = mat.values.find("roughnessFactor"); find != mat.values.end()) {
+					material.roughnessFactor = static_cast<float>(find->second.Factor());
 				}
-				if (mat.values.find("metallicFactor") != mat.values.end()) {
-					material.metallicFactor = static_cast<float>(mat.values["metallicFactor"].Factor());
+				if (auto find = mat.values.find("metallicFactor"); find != mat.values.end()) {
+					material.metallicFactor = static_cast<float>(find->second.Factor());
 				}
-				if (mat.values.find("baseColorFactor") != mat.values.end()) {
-					material.baseColorFactor = glm::make_vec4(mat.values["baseColorFactor"].ColorFactor().data());
+				if (auto find = mat.values.find("baseColorFactor"); find != mat.values.end()) {
+					material.baseColorFactor = glm::make_vec4(find->second.ColorFactor().data());
 				}
-				if (mat.additionalValues.find("normalTexture") != mat.additionalValues.end()) {
-					material.normalTexture = _textureBuffers[mat.additionalValues["normalTexture"].TextureIndex()];
-					material.texCoordSets.normal = mat.additionalValues["normalTexture"].TextureTexCoord();
+				if (auto find = mat.additionalValues.find("normalTexture"); find != mat.additionalValues.end()) {
+					material.normalTexture = _textureBuffers[find->second.TextureIndex()];
+					material.texCoordSets.normal = find->second.TextureTexCoord();
 				}
-				if (mat.additionalValues.find("emissiveTexture") != mat.additionalValues.end()) {
-					material.emissiveTexture = _textureBuffers[mat.additionalValues["emissiveTexture"].TextureIndex()];
-					material.texCoordSets.emissive = mat.additionalValues["emissiveTexture"].TextureTexCoord();
+				if (auto find = mat.additionalValues.find("emissiveTexture"); find != mat.additionalValues.end()) {
+					material.emissiveTexture = _textureBuffers[find->second.TextureIndex()];
+					material.texCoordSets.emissive = find->second.TextureTexCoord();
 				}
-				if (mat.additionalValues.find("occlusionTexture") != mat.additionalValues.end()) {
-					material.occlusionTexture = _textureBuffers[mat.additionalValues["occlusionTexture"].TextureIndex()];
-					material.texCoordSets.occlusion = mat.additionalValues["occlusionTexture"].TextureTexCoord();
+				if (auto find = mat.additionalValues.find("occlusionTexture"); find != mat.additionalValues.end()) {
+					material.occlusionTexture = _textureBuffers[find->second.TextureIndex()];
+					material.texCoordSets.occlusion = find->second.TextureTexCoord();
 				}
-				if (mat.additionalValues.find("alphaMode") != mat.additionalValues.end()) {
-					tinygltf::Parameter param = mat.additionalValues["alphaMode"];
+				if (auto find = mat.additionalValues.find("alphaMode"); find != mat.additionalValues.end()) {
+					const tinygltf::Parameter& param = find->second;
 					if (param.string_value == "BLEND") {
 						material.alphaMode = Material::ALPHAMODE_BLEND;
 					}
@@ -265,11 +285,11 @@ namespace vxt
 						material.alphaMode = Material::ALPHAMODE_MASK;
 					}
 				}
-				if (mat.additionalValues.find("alphaCutoff") != mat.additionalValues.end()) {
-					material.alphaCutoff = static_cast<float>(mat.additionalValues["alphaCutoff"].Factor());
+				if (auto find = mat.additionalValues.find("alphaCutoff"); find != mat.additionalValues.end()) {
+					material.alphaCutoff = static_cast<float>(find->second.Factor());
 				}
-				if (mat.additionalValues.find("emissiveFactor") != mat.additionalValues.end()) {
-					material.emissiveFactor = glm::vec4(glm::make_vec3(mat.additionalValues["emissiveFactor"].ColorFactor().data()), 1.0);
+				if (auto find = mat.additionalValues.find("emissiveFactor"); find != mat.additionalValues.end()) {
+					material.emissiveFactor = glm::vec4(glm::make_vec3(find->second.ColorFactor().data()), 1.0);
 					material.emissiveFactor = glm::vec4(0.0f);
 				}
 
@@ -541,6 +561,35 @@ namespace vxt
 		std::vector<NodeTransform> _nodeTransforms;
 		std::vector<int> _nodeParents;
 	};
+
+	class VXT_EXPORT glTFDriver : public AssetDriver
+	{
+		ASSET_DRIVER
+	public:
+		virtual bool supportsAsset(std::string_view file) const override
+		{
+			return file.find(".glb") != std::string::npos || file.find(".gltf") != std::string::npos;
+		}
+		virtual std::string_view driverName() const override
+		{
+			return "gltf";
+		}
+
+		virtual std::shared_ptr<const FileAsset> buildFileAsset(std::string_view file) const override
+		{
+			auto asset = std::make_shared< glTFModelFile>();
+			if (asset->processFile(file))
+				return asset;
+			return nullptr;
+		}
+		virtual std::shared_ptr<const DeviceAsset> buildDeviceAsset(std::shared_ptr<const FileAsset> fileAsset, const vkl::Device& device, const vkl::SwapChain& swapChain, vkl::BufferManager& bufferManager) const override
+		{
+			auto asset = std::make_shared<glTFModel>();
+			if (asset->buildAsset(fileAsset, device, swapChain, bufferManager))
+				return asset;
+			return nullptr;
+		}
+
+	};
 }
-IMPL_REFLECTION(vxt::Model)
-IMPL_REFLECTION(vxt::glTFModel)
+REGISTER_DRIVER(vxt::glTFDriver)

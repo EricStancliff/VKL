@@ -1,5 +1,4 @@
 #include <vkl/RenderObject.h>
-#include <vkl/Reflect.h>
 
 #include <vkl/SwapChain.h>
 #include <vkl/Device.h>
@@ -8,17 +7,13 @@
 #include <vkl/TextureBuffer.h>
 #include <vkl/DrawCall.h>
 #include <vkl/IndexBuffer.h>
+#include <vkl/PipelineFactory.h>
 
 namespace vkl
 {
-	void RenderObject::populateReflection(RenderObjectDescription& reflection)
-	{
-		reflection.setAbstract(true);
-	}
-
 	void RenderObject::recordCommands(const SwapChain& swapChain, const PipelineManager& pipelines, VkCommandBuffer buffer, const VkExtent2D& extent)
 	{
-		const Pipeline* pipeline = pipelines.pipelineForType(this->reflect().index);
+		const Pipeline* pipeline = pipelines.pipelineForType(std::type_index(typeid(*this)));
 		if (!pipeline)
 			return;
 
@@ -61,9 +56,9 @@ namespace vkl
 
 	}
 
-	const PipelineDescription& RenderObject::pipelineDescription() const
+	std::shared_ptr<const PipelineDescription> RenderObject::pipelineDescription() const
 	{
-		return static_cast<const RenderObjectDescription*>(reflect().data)->pipelineDescription();
+		return PipelineMetaFactory::instance().description(std::type_index(typeid(*this)));
 	}
 
 	void RenderObject::addVBO(const Device& device, const SwapChain& swapChain, std::shared_ptr<const VertexBuffer> vbo, uint32_t binding)
@@ -150,7 +145,7 @@ namespace vkl
 	}
 	void RenderObject::initPipeline(const Device& device, const SwapChain& swapChain, BufferManager& bufferManager, const PipelineManager& pipelines)
 	{
-		auto pipeline = pipelines.pipelineForType(reflect::reflect(this).index);
+		const Pipeline* pipeline = pipelines.pipelineForType(std::type_index(typeid(*this)));
 		if (!pipeline)
 		{
 			throw std::runtime_error("Error");
@@ -172,5 +167,3 @@ namespace vkl
 
 	}
 }
-
-IMPL_REFLECTION(vkl::RenderObject)

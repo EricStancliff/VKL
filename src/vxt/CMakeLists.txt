@@ -1,6 +1,7 @@
 
 
 set(vxt_source
+	./AssetFactory.cpp
 	./Camera.cpp
 	./FirstPersonManip.cpp
 	./ModelRenderObject.cpp
@@ -10,6 +11,7 @@ set(vxt_source
 
 set(vkl_include_dir ${CMAKE_SOURCE_DIR}/include)
 set(vxt_includes
+	${vkl_include_dir}/vxt/AssetFactory.h
 	${vkl_include_dir}/vxt/Camera.h
 	${vkl_include_dir}/vxt/CameraManip.h
 	${vkl_include_dir}/vxt/FirstPersonManip.h

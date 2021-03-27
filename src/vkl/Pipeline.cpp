@@ -1,7 +1,6 @@
 #include <vkl/Pipeline.h>
 
 #include <vkl/Shader.h>
-#include <vkl/Reflect.h>
 #include <vkl/RenderObject.h>
 #include <vkl/Device.h>
 #include <vkl/RenderPass.h>
@@ -214,7 +213,7 @@ namespace vkl
 	/*****************************************************************************************************************/
 
 
-	Pipeline::Pipeline(const Device& device, const SwapChain& swapChain, const PipelineDescription& description, const RenderPass& renderPass, size_t typeIndex) : _type(typeIndex)
+	Pipeline::Pipeline(const Device& device, const SwapChain& swapChain, const PipelineDescription& description, const RenderPass& renderPass, std::type_index typeIndex) : _type(typeIndex)
 	{
 		createDescriptorSetLayout(device, swapChain, description, renderPass);
 		createPipeline(device, swapChain, description, renderPass);
@@ -455,7 +454,7 @@ namespace vkl
 		return _pipeline;
 	}
 
-	size_t Pipeline::type() const
+	std::type_index Pipeline::type() const
 	{
 		return _type;
 	}
@@ -470,44 +469,5 @@ namespace vkl
 		vkDestroyPipelineLayout(device.handle(), _pipelineLayout, nullptr);
 		vkDestroyDescriptorSetLayout(device.handle(), _descriptorSetLayout, nullptr);
 		vkDestroyDescriptorPool(device.handle(), _descriptorPool, nullptr);
-	}
-	/*****************************************************************************************************************/
-	PipelineManager::PipelineManager(const Device& device, const SwapChain& swapChain, const RenderPass& renderPass)
-	{
-		reflect::forAllTypesDerivedFrom<RenderObject>([&](const reflect::reflection& data) {
-			const RenderObjectDescription* roDesc = dynamic_cast<const RenderObjectDescription*>(data.data);
-			if (!roDesc)
-				return;
-
-			if (roDesc->isAbstract())
-				return;
-
-			const PipelineDescription& pipelineDesc = roDesc->pipelineDescription();
-			size_t typeIndex = data.index;
-
-			auto findWhere = std::lower_bound(_pipelines.begin(), _pipelines.end(), typeIndex, [&](const Pipeline& pipePair, const size_t& index) {
-				return pipePair.type() < index;
-				});
-
-			Pipeline pipeline(device, swapChain, pipelineDesc, renderPass, typeIndex);
-			_pipelines.emplace_back(std::move(pipeline));
-
-		});
-
-	}
-	const Pipeline* PipelineManager::pipelineForType(size_t type) const
-	{
-		auto findWhere = std::lower_bound(_pipelines.begin(), _pipelines.end(), type, [&](const Pipeline& pipePair, const size_t& index) {
-			return pipePair.type() < index;
-			});
-		if (findWhere == _pipelines.end())
-			return nullptr;
-		return &(*findWhere);
-	}
-	void PipelineManager::cleanUp(const Device& device)
-	{
-		for (auto&& pipeline : _pipelines)
-			pipeline.cleanUp(device);
-		_pipelines.clear();
 	}
 }

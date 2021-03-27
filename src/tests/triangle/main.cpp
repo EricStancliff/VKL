@@ -15,6 +15,7 @@
 #include <vkl/IndexBuffer.h>
 
 #include <vxt/LinearAlgebra.h>
+#include <vkl/PipelineFactory.h>
 
 constexpr const char* VertShader = R"Shader(
 
@@ -50,18 +51,19 @@ struct Vertex
 	glm::vec3 color;
 };
 
+
 class Triangle : public vkl::RenderObject
 {
-	REFLECTED_TYPE(Triangle, vkl::RenderObject)
-	static void populateReflection(vkl::RenderObjectDescription& reflection)
+	PIPELINE_TYPE
+	static void describePipeline(vkl::PipelineDescription& description)
 	{
-		reflection.pipelineDescription().setPrimitiveTopology(VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST);
+		description.setPrimitiveTopology(VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST);
 
-		reflection.pipelineDescription().addShaderGLSL(VK_SHADER_STAGE_VERTEX_BIT, VertShader);
-		reflection.pipelineDescription().addShaderGLSL(VK_SHADER_STAGE_FRAGMENT_BIT, FragShader);
+		description.addShaderGLSL(VK_SHADER_STAGE_VERTEX_BIT, VertShader);
+		description.addShaderGLSL(VK_SHADER_STAGE_FRAGMENT_BIT, FragShader);
 
-		reflection.pipelineDescription().declareVertexAttribute(0, 0, VK_FORMAT_R32G32_SFLOAT, sizeof(Vertex), offsetof(Vertex, pos));
-		reflection.pipelineDescription().declareVertexAttribute(0, 1, VK_FORMAT_R32G32B32_SFLOAT, sizeof(Vertex), offsetof(Vertex, color));
+		description.declareVertexAttribute(0, 0, VK_FORMAT_R32G32_SFLOAT, sizeof(Vertex), offsetof(Vertex, pos));
+		description.declareVertexAttribute(0, 1, VK_FORMAT_R32G32B32_SFLOAT, sizeof(Vertex), offsetof(Vertex, color));
 	}
 
 public:
@@ -98,7 +100,7 @@ private:
 	std::vector<uint32_t> _indices;
 };
 
-IMPL_REFLECTION(Triangle)
+REGISTER_PIPELINE(Triangle, Triangle::describePipeline)
 
 int main(int argc, char* argv[])
 {

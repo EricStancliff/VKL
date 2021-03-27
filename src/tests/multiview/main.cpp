@@ -17,6 +17,8 @@
 #include <vxt/PNGLoader.h>
 
 #include <vxt/LinearAlgebra.h>
+#include <vkl/PipelineFactory.h>
+#include <iostream>
 
 constexpr const char* VertShader = R"Shader(
 
@@ -56,18 +58,18 @@ struct Vertex
 
 class ImagePlane : public vkl::RenderObject
 {
-	REFLECTED_TYPE(ImagePlane, vkl::RenderObject)
-	static void populateReflection(vkl::RenderObjectDescription& reflection)
+	PIPELINE_TYPE
+	static void describePipeline(vkl::PipelineDescription& description)
 	{
-		reflection.pipelineDescription().setPrimitiveTopology(VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST);
+		description.setPrimitiveTopology(VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST);
 
-		reflection.pipelineDescription().addShaderGLSL(VK_SHADER_STAGE_VERTEX_BIT, VertShader);
-		reflection.pipelineDescription().addShaderGLSL(VK_SHADER_STAGE_FRAGMENT_BIT, FragShader);
+		description.addShaderGLSL(VK_SHADER_STAGE_VERTEX_BIT, VertShader);
+		description.addShaderGLSL(VK_SHADER_STAGE_FRAGMENT_BIT, FragShader);
 
-		reflection.pipelineDescription().declareVertexAttribute(0, 0, VK_FORMAT_R32G32_SFLOAT, sizeof(Vertex), offsetof(Vertex, pos));
-		reflection.pipelineDescription().declareVertexAttribute(0, 1, VK_FORMAT_R32G32_SFLOAT, sizeof(Vertex), offsetof(Vertex, uv));
+		description.declareVertexAttribute(0, 0, VK_FORMAT_R32G32_SFLOAT, sizeof(Vertex), offsetof(Vertex, pos));
+		description.declareVertexAttribute(0, 1, VK_FORMAT_R32G32_SFLOAT, sizeof(Vertex), offsetof(Vertex, uv));
 
-		reflection.pipelineDescription().declareTexture(1);
+		description.declareTexture(1);
 	}
 
 public:
@@ -136,7 +138,7 @@ private:
 	void* _imageData{ nullptr };
 };
 
-IMPL_REFLECTION(ImagePlane)
+REGISTER_PIPELINE(ImagePlane, ImagePlane::describePipeline)
 
 struct VulkanWindow
 {
@@ -212,8 +214,8 @@ int main(int argc, char* argv[])
 	//one instance
 	vkl::Instance instance("triangle_vkl", true);
 
-	VulkanWindow window1 = buildWindow(instance, "window one", (std::filesystem::path(vkl::vklDataDir()) / "textures" / "texture.jpg").make_preferred().string());
-	VulkanWindow window2 = buildWindow(instance, "window two", (std::filesystem::path(vkl::vklDataDir()) / "textures" / "kelloggs.PNG").make_preferred().string(), true);
+	VulkanWindow window1 = buildWindow(instance, "window one", (std::filesystem::path(VKL_DATA_DIR) / "textures" / "texture.jpg").make_preferred().string());
+	VulkanWindow window2 = buildWindow(instance, "window two", (std::filesystem::path(VKL_DATA_DIR) / "textures" / "kelloggs.PNG").make_preferred().string(), true);
 
 	bool window1Closed = false;
 	bool window2Closed = false;
