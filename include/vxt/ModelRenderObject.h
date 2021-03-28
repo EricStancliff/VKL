@@ -28,7 +28,12 @@ namespace vxt
 		void setShape(const vkl::Device& device, const vkl::SwapChain& swapChain, std::shared_ptr<const Model> model, size_t index);
 		size_t getShape() const;
 
-		//This gets any bigger and we can't push constant
+		void update(const vkl::Device& device, const vkl::SwapChain& swapChain, const glm::mat4& modelMatrix, const Camera& cam, std::shared_ptr<const Model> model,
+			std::string_view animationName, double animationInput);
+
+
+	private:
+
 		struct MVP
 		{
 			glm::mat4 model;
@@ -36,13 +41,19 @@ namespace vxt
 			glm::mat4 proj;
 			glm::mat4 shape;
 		};
-		void update(const vkl::Device& device, const vkl::SwapChain& swapChain, const glm::mat4& model, const Camera& cam);
+
+		struct Joints
+		{
+			JointArray joints;
+			float jointCount{ 0.f };
+		};
 
 
-	private:
 		size_t _shapeIndex{ 0 };
 		MVP _transform;
+		Joints _joints;
 		std::shared_ptr<vkl::TypedUniform<MVP>> _uniform;
+		std::shared_ptr<vkl::TypedUniform<Joints>> _jointsUniform;
 	};
 
 	class VXT_EXPORT ModelRenderObject
@@ -58,6 +69,7 @@ namespace vxt
 		void setModel(const vkl::Device& device, const vkl::SwapChain& swapChain, vkl::BufferManager& bufferManager, const vkl::PipelineManager& pipelines, std::shared_ptr<const Model> model);
 		std::shared_ptr<const Model> getModel() const;
 
+		void animate(std::string_view animationName, double input);
 		void update(const vkl::Device& device, const vkl::SwapChain& swapChain, const Camera& cam);
 
 		glm::mat4 getTransform() const;
@@ -70,5 +82,8 @@ namespace vxt
 		std::vector<std::shared_ptr<ModelShapeObject>> _shapes;
 		std::shared_ptr<const Model> _model;
 		glm::mat4 _transform{ glm::identity<glm::mat4>() };
+
+		std::string _animationName;
+		double _animationInput{ 0 };
 	};
 }

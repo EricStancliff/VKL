@@ -213,6 +213,9 @@ int main(int argc, char* argv[])
 		vkl::Window::pollEventsForAllWindows();
 
 		window.manip.process(window.window, window.cam);
+		uint64_t millis = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+		double seconds = (double)millis / 1000.f;
+		modelObject->animate("", seconds);
 		modelObject->update(window.device, window.swapChain, window.cam);
 		axis->update(window.cam);
 		updateWindow(window);

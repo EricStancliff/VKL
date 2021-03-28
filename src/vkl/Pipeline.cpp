@@ -224,9 +224,9 @@ namespace vkl
 		//Descriptor Pool
 		std::array<VkDescriptorPoolSize, 2> poolSizes{};
 		poolSizes[0].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-		poolSizes[0].descriptorCount = static_cast<uint32_t>(swapChain.framesInFlight());
+		poolSizes[0].descriptorCount = static_cast<uint32_t>(swapChain.framesInFlight()) * std::max(1u, (uint32_t)description.uniforms().size());
 		poolSizes[1].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-		poolSizes[1].descriptorCount = static_cast<uint32_t>(swapChain.framesInFlight());
+		poolSizes[1].descriptorCount = static_cast<uint32_t>(swapChain.framesInFlight()) * std::max(1u, (uint32_t)description.textures().size());
 
 		VkDescriptorPoolCreateInfo poolInfo{};
 		poolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;

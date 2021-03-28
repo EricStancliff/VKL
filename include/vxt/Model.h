@@ -18,6 +18,9 @@ https://github.com/SaschaWillems/Vulkan-glTF-PBR
 
 namespace vxt
 {
+	constexpr size_t MaxNumJoints = 128;
+	using JointArray = glm::mat4[MaxNumJoints];
+
 	class VXT_EXPORT Model : public DeviceAsset
 	{
 	public:
@@ -86,5 +89,10 @@ namespace vxt
 
 		virtual std::span<const Primitive> getPrimitives() const = 0;
 		virtual std::span<const Material> getMaterials() const = 0;
+
+		virtual bool supportsAnimations() const { return false; }
+		virtual bool supportsMorphTargets() const { return false; }
+
+		virtual bool animate(JointArray& joints, float& jointCount, glm::mat4& shapeTransform, size_t shape, std::string_view animation, double input, bool loop = true) const { return false; }
 	};
 }
