@@ -32,11 +32,14 @@ namespace vxt
 			else if (event->getType() == vkl::EventType::MOUSE_DOWN)
 			{
 				_leftMouseDown |= static_cast<const vkl::MouseDownEvent*>(event.get())->button == vkl::MouseButton::LEFT;
+				_rightMouseDown |= static_cast<const vkl::MouseDownEvent*>(event.get())->button == vkl::MouseButton::RIGHT;
 			}
 			else if (event->getType() == vkl::EventType::MOUSE_UP)
 			{
 				if(_leftMouseDown && static_cast<const vkl::MouseUpEvent*>(event.get())->button == vkl::MouseButton::LEFT)
 					_leftMouseDown = false;
+				if (_rightMouseDown && static_cast<const vkl::MouseUpEvent*>(event.get())->button == vkl::MouseButton::RIGHT)
+					_rightMouseDown = false;
 			}
 			else if (event->getType() == vkl::EventType::MOUSE_MOVE)
 			{
@@ -50,7 +53,7 @@ namespace vxt
 		updated |= rotate(window, camera);
 		updated |= translate(window, camera);
 
-		updateProjection(window, camera);
+		_lastMousePos = _mousePos;
 
 		return updated;
 	}
@@ -72,17 +75,38 @@ namespace vxt
 			float dx = _mousePos.x - _lastMousePos.x;
 			float dy = _mousePos.y - _lastMousePos.y;
 
+			dx *= .25;
+			dy *= .25;
+
 			auto view = camera.view();
 			auto invView = glm::inverse(view);
 
-			invView = glm::rotate(invView, glm::radians(dx), { 1, 0, 0 });
-			invView = glm::rotate(invView, glm::radians(dy), { 0, 1, 0 });
+			invView = glm::rotate(invView, glm::radians(dx), { 0, -1, 0 });
+			invView = glm::rotate(invView, glm::radians(dy), { -1, 0, 0 });
 
 			view = glm::inverse(invView);
 
 			camera.setView(view);
+			updateProjection(window, camera);
 
-			_lastMousePos = _mousePos;
+			return true;
+		}
+		if (_rightMouseDown && _lastMousePos != _mousePos)
+		{
+			float dx = _mousePos.x - _lastMousePos.x;
+
+			dx *= .25;
+
+			auto view = camera.view();
+			auto invView = glm::inverse(view);
+
+			invView = glm::rotate(invView, glm::radians(dx), { 0, 0, -1 });
+
+			view = glm::inverse(invView);
+
+			camera.setView(view);
+			updateProjection(window, camera);
+
 			return true;
 		}
 		return false;
@@ -94,7 +118,7 @@ namespace vxt
 
 		auto view = camera.view();
 
-		glm::vec3 trans = glm::vec3(view[3]) * glm::vec3(-1);
+		glm::vec3 trans = glm::inverse(view)[3];
 
 		glm::vec3 right;
 		right.x = view[0][0];
@@ -107,9 +131,9 @@ namespace vxt
 		up.z = view[2][1];
 
 		glm::vec3 forward;
-		forward.x = view[0][2];
-		forward.y = view[1][2];
-		forward.z = view[2][2];
+		forward.x = -view[0][2];
+		forward.y = -view[1][2];
+		forward.z = -view[2][2];
 
 		for (auto&& key : _keysDown)
 		{
@@ -140,28 +164,33 @@ namespace vxt
 			}
 			else if (key == vkl::Key::KEY_Q)
 			{
-				//up
-				trans = trans + (_speed * up);
+				//down
+				trans = trans - (_speed * up);
 				move = true;
 			}
 			else if (key == vkl::Key::KEY_E)
 			{
-				//down
-				trans = trans - (_speed * up);
+				//up
+				trans = trans + (_speed * up);
 				move = true;
 			}
 
 		}
 
 		if (move)
+		{
 			camera.setView(glm::lookAt(trans, trans + forward, up));
+			updateProjection(window, camera);
+		}
 
 		return move;
 	}
 
 	void FirstPersonManip::updateProjection(const vkl::Window& window, Camera& camera)
 	{
-		camera.setProjection(glm::perspective(glm::radians(45.f), (float)window.width() / (float)window.height(), 0.1f, 1000.f)); //TEMP
+		auto proj = glm::perspective(glm::radians(45.f), (float)window.width() / (float)window.height(), 0.1f, 1000.f);
+		proj[1][1] *= -1;
+		camera.setProjection(proj); //TEMP
 	}
 
 

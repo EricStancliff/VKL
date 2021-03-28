@@ -19,6 +19,102 @@
 #include <vxt/Model.h>
 #include <vxt/ModelRenderObject.h>
 
+constexpr const char* VertShader = R"Shader(
+
+#version 450
+
+layout(push_constant) uniform MVP {
+	mat4 mvp;
+} u_mvp;
+
+layout(location = 0) in vec3 inPosition;
+layout(location = 1) in vec3 inColor;
+
+layout(location = 0) out vec3 fragColor;
+
+void main() {
+    gl_Position = u_mvp.mvp * vec4(inPosition, 1.0);
+    fragColor = inColor;
+}
+)Shader";
+constexpr const char* FragShader = R"Shader(
+
+#version 450
+
+layout(location = 0) in vec3 fragColor;
+
+layout(location = 0) out vec4 outColor;
+
+void main() {
+    outColor = vec4(fragColor, 1.0);
+}
+)Shader";
+
+struct Vertex
+{
+	glm::vec3 pos;
+	glm::vec3 color;
+};
+
+class Axis : public vkl::RenderObject
+{
+	PIPELINE_TYPE
+	
+	static void describePipeline(vkl::PipelineDescription& description)
+	{
+		description.setPrimitiveTopology(VK_PRIMITIVE_TOPOLOGY_LINE_LIST);
+
+		description.addShaderGLSL(VK_SHADER_STAGE_VERTEX_BIT, VertShader);
+		description.addShaderGLSL(VK_SHADER_STAGE_FRAGMENT_BIT, FragShader);
+
+		description.declareVertexAttribute(0, 0, VK_FORMAT_R32G32B32_SFLOAT, sizeof(Vertex), offsetof(Vertex, pos));
+		description.declareVertexAttribute(0, 1, VK_FORMAT_R32G32B32_SFLOAT, sizeof(Vertex), offsetof(Vertex, color));
+
+		description.declarePushConstant(sizeof(glm::mat4));
+	}
+
+public:
+	Axis(const vkl::Device& device, const vkl::SwapChain& swapChain, const vkl::PipelineManager& pipelines, vkl::BufferManager& bufferManager)
+	{
+		auto vbo = bufferManager.createVertexBuffer(device, swapChain);
+
+		//x
+		_verts.push_back({ glm::vec3(0.0, 0.0, 0.), glm::vec3(1,0,0) });
+		_verts.push_back({ glm::vec3(100.0, 0.0, 0.), glm::vec3(1,0,0) });
+
+		//y
+		_verts.push_back({ glm::vec3(0.0, 0.0, 0.), glm::vec3(0,1,0) });
+		_verts.push_back({ glm::vec3(0.0, 100.0, 0.), glm::vec3(0,1,0) });
+
+		//z
+		_verts.push_back({ glm::vec3(0.0, 0.0, 0.), glm::vec3(0,0,1) });
+		_verts.push_back({ glm::vec3(0.0, 0.0, 100.0), glm::vec3(0,0,1) });
+
+
+		vbo->setData(_verts.data(), sizeof(Vertex), _verts.size());
+		addVBO(vbo, 0);
+
+		auto drawCall = std::make_shared<vkl::DrawCall>();
+		drawCall->setCount(_verts.size());
+
+		addDrawCall(drawCall);
+
+		_mvp = std::make_shared<vkl::PushConstant<glm::mat4>>();
+		setPushConstant(_mvp);
+	}
+
+	void update(const vxt::Camera& cam)
+	{
+		_mvp->setData(cam.projection() * cam.view());
+	}
+
+private:
+	std::vector<Vertex> _verts;
+	std::shared_ptr<vkl::PushConstant<glm::mat4>> _mvp;
+};
+
+REGISTER_PIPELINE(Axis, Axis::describePipeline)
+
 struct VulkanWindow
 {
 	vkl::Window window;
@@ -91,6 +187,8 @@ int main(int argc, char* argv[])
 
 	VulkanWindow window = buildWindow(instance, "model_vkl");
 
+	window.manip.setSpeed(.1f);
+
 	vxt::AssetFactory::instance().addSearchPath((std::filesystem::path(VKL_DATA_DIR) / "models").make_preferred().string(), false);
 
 	auto model = vxt::AssetFactory::instance().deviceAsset<vxt::Model>("CesiumMan.glb", window.device, window.swapChain, window.bufferManager);
@@ -99,11 +197,14 @@ int main(int argc, char* argv[])
 		return -1;
 
 	auto modelObject = std::make_shared<vxt::ModelRenderObject>();
-	modelObject->setModel(window.device, window.swapChain, window.bufferManager, window.pipelineManager, model);
+  	modelObject->setModel(window.device, window.swapChain, window.bufferManager, window.pipelineManager, model);
 	for (auto&& shape : modelObject->shapes())
 		window.renderObjects.push_back(shape);
 
-	window.cam.setView(glm::lookAt(glm::vec3{ 5.f,0.f,0.f }, glm::vec3{ 0.f, 0.f, 0.f }, glm::vec3{ 0.f, 1.f, 0.f }));
+	auto axis = std::make_shared<Axis>(window.device, window.swapChain, window.pipelineManager, window.bufferManager);
+	window.renderObjects.push_back(axis);
+
+	window.cam.setView(glm::lookAt(glm::vec3( 5.f,0.f,0.f ), glm::vec3( 0.f, 0.f, 0.f ), glm::vec3( 0.f, 1.f, 0.f )));
 
 	while (!window.window.shouldClose())
 	{
@@ -113,6 +214,7 @@ int main(int argc, char* argv[])
 
 		window.manip.process(window.window, window.cam);
 		modelObject->update(window.device, window.swapChain, window.cam);
+		axis->update(window.cam);
 		updateWindow(window);
 	}
 	window.cleanUp(instance);

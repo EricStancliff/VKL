@@ -33,7 +33,7 @@ namespace vkl
 		vkCmdBindDescriptorSets(buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline->pipelineLayoutHandle(), 0, 1, &_descriptorSets[swapChain.frame()], 0, nullptr);
 
 		if (_pushConstant)
-			vkCmdPushConstants(buffer, pipeline->pipelineLayoutHandle(), VK_SHADER_STAGE_ALL_GRAPHICS, 0, (uint32_t)_pushConstant->size(), _pushConstant->data());
+			vkCmdPushConstants(buffer, pipeline->pipelineLayoutHandle(), VK_SHADER_STAGE_VERTEX_BIT, 0, (uint32_t)_pushConstant->size(), _pushConstant->data());
 
 		for (auto&& dc : _drawCalls)
 		{

@@ -411,10 +411,11 @@ namespace vkl
 		VkPushConstantRange pushConstantRange{};
 		if (description.pushConstant().hasPushConstant)
 		{
-			pushConstantRange.stageFlags = VK_SHADER_STAGE_ALL_GRAPHICS;
+			pushConstantRange.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
 			pushConstantRange.offset = 0;
 			pushConstantRange.size = (uint32_t)description.pushConstant().size;
 			pipelineLayoutInfo.pPushConstantRanges = &pushConstantRange;
+			pipelineLayoutInfo.pushConstantRangeCount = 1;
 		}
 
 		if (vkCreatePipelineLayout(device.handle(), &pipelineLayoutInfo, nullptr, &_pipelineLayout) != VK_SUCCESS) {

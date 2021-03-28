@@ -35,6 +35,7 @@ namespace vxt
 
 		float _speed{ 1.f };
 		bool _leftMouseDown{ false };
+		bool _rightMouseDown{ false };
 
 		bool _init{ false };
 	};
