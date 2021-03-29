@@ -556,6 +556,7 @@ namespace vxt
 						const float* bufferTexCoordSet0 = nullptr;
 						const float* bufferTexCoordSet1 = nullptr;
 						const uint16_t* bufferJoints = nullptr;
+						const unsigned char* bufferJoints_char = nullptr;
 						const float* bufferWeights = nullptr;
 
 						int posByteStride;
@@ -601,7 +602,15 @@ namespace vxt
 						if (primitive.attributes.find("JOINTS_0") != primitive.attributes.end()) {
 							const tinygltf::Accessor& jointAccessor = model.accessors[primitive.attributes.find("JOINTS_0")->second];
 							const tinygltf::BufferView& jointView = model.bufferViews[jointAccessor.bufferView];
-							bufferJoints = reinterpret_cast<const uint16_t*>(&(model.buffers[jointView.buffer].data[jointAccessor.byteOffset + jointView.byteOffset]));
+
+							if (jointAccessor.componentType == TINYGLTF_COMPONENT_TYPE_UNSIGNED_BYTE)
+							{
+								bufferJoints_char = reinterpret_cast<const unsigned char*>(&(model.buffers[jointView.buffer].data[jointAccessor.byteOffset + jointView.byteOffset]));
+							}
+							else
+							{
+								bufferJoints = reinterpret_cast<const uint16_t*>(&(model.buffers[jointView.buffer].data[jointAccessor.byteOffset + jointView.byteOffset]));
+							}
 							jointByteStride = jointAccessor.ByteStride(jointView) ? (jointAccessor.ByteStride(jointView) / sizeof(bufferJoints[0])) : tinygltf::GetTypeSizeInBytes(TINYGLTF_TYPE_VEC4);
 						}
 
@@ -612,7 +621,7 @@ namespace vxt
 							weightByteStride = weightAccessor.ByteStride(weightView) ? (weightAccessor.ByteStride(weightView) / sizeof(float)) : tinygltf::GetTypeSizeInBytes(TINYGLTF_TYPE_VEC4);
 						}
 
-						hasSkin = (bufferJoints && bufferWeights);
+						hasSkin = ((bufferJoints || bufferJoints_char) && bufferWeights);
 
 						for (size_t v = 0; v < posAccessor.count; v++) {
 							Vertex vert{};
@@ -621,7 +630,27 @@ namespace vxt
 							vert.uv0 = bufferTexCoordSet0 ? glm::make_vec2(&bufferTexCoordSet0[v * uv0ByteStride]) : glm::vec3(0.0f);
 							vert.uv1 = bufferTexCoordSet1 ? glm::make_vec2(&bufferTexCoordSet1[v * uv1ByteStride]) : glm::vec3(0.0f);
 
-							vert.joint0 = hasSkin ? glm::vec4(glm::make_vec4(&bufferJoints[v * jointByteStride])) : glm::vec4(0.0f);
+							if (hasSkin)
+							{
+								size_t jointIndex = v * 4;
+
+								if (bufferJoints)
+								{
+									uint16_t jointx = bufferJoints[jointIndex];
+									uint16_t jointy = bufferJoints[jointIndex + 1];
+									uint16_t jointz = bufferJoints[jointIndex + 2];
+									uint16_t jointw = bufferJoints[jointIndex + 3];
+									vert.joint0 = glm::vec4(jointx, jointy, jointz, jointw);
+								}
+								else if (bufferJoints_char)
+								{
+									unsigned char jointx = bufferJoints_char[jointIndex];
+									unsigned char jointy = bufferJoints_char[jointIndex + 1];
+									unsigned char jointz = bufferJoints_char[jointIndex + 2];
+									unsigned char jointw = bufferJoints_char[jointIndex + 3];
+									vert.joint0 = glm::vec4(jointx, jointy, jointz, jointw);
+								}
+							}
 							vert.weight0 = hasSkin ? glm::make_vec4(&bufferWeights[v * weightByteStride]) : glm::vec4(0.0f);
 							// Fix for all zero weights
 							if (glm::length(vert.weight0) == 0.0f) {
@@ -630,6 +659,7 @@ namespace vxt
 							_verts.push_back(vert);
 						}
 					}
+
 					// Indices
 					if (hasIndices)
 					{
@@ -862,6 +892,8 @@ namespace vxt
 			{
 				int skinNode = skin.skeletonRoot;
 				if (node == skinNode)
+					return &skin;
+				if (std::find(skin.joints.begin(), skin.joints.end(), node) != skin.joints.end())
 					return &skin;
 			}
 

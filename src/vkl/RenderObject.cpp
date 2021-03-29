@@ -51,7 +51,7 @@ namespace vkl
 			if (dc->indexBuffer())
 			{
 				vkCmdBindIndexBuffer(buffer, dc->indexBuffer()->handle(swapChain.frame()), 0, VK_INDEX_TYPE_UINT32);
-				vkCmdDrawIndexed(buffer, (uint32_t)dc->count(), 1, 0, (uint32_t)dc->offset(), 0);
+				vkCmdDrawIndexed(buffer, (uint32_t)dc->count(), 1, (uint32_t)dc->offset(), 0, 0);
 			}
 			else
 			{

@@ -37,10 +37,10 @@ namespace vxt
 
 		struct MVP
 		{
-			glm::mat4 model;
-			glm::mat4 view;
-			glm::mat4 proj;
-			glm::mat4 shape;
+			glm::mat4 model{ glm::identity<glm::mat4>() };
+			glm::mat4 view{ glm::identity<glm::mat4>() };
+			glm::mat4 proj{ glm::identity<glm::mat4>() };
+			glm::mat4 shape{ glm::identity<glm::mat4>() };
 		};
 
 		struct Joints
