@@ -26,4 +26,17 @@ namespace vxt
 	{
 		_viewport = viewport;
 	}
+	void Camera::setLight(size_t lightIndex, const Light& light)
+	{
+		assert(lightIndex < MaxNumLights && "Light index too high!!");
+		_lights[lightIndex] = light;
+	}
+	void Camera::clearLights()
+	{
+		_lights.fill({});
+	}
+	std::span<const Light> Camera::lights() const
+	{
+		return _lights;
+	}
 }

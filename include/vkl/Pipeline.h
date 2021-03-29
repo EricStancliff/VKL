@@ -93,7 +93,6 @@ namespace vkl
 
 		VkPipeline handle() const;
 		VkDescriptorSetLayout descriptorSetLayoutHandle() const;
-		VkDescriptorPool descriptorPoolHandle() const;
 		VkPipelineLayout pipelineLayoutHandle() const;
 
 		std::type_index type() const;
@@ -108,7 +107,6 @@ namespace vkl
 		VkPipeline _pipeline{ VK_NULL_HANDLE };
 		VkPipelineLayout _pipelineLayout{ VK_NULL_HANDLE };
 		VkDescriptorSetLayout _descriptorSetLayout{ VK_NULL_HANDLE };
-		VkDescriptorPool _descriptorPool{ VK_NULL_HANDLE };
 		std::type_index _type;
 	};
 	/*****************************************************************************************************************/

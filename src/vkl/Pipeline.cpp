@@ -221,23 +221,6 @@ namespace vkl
 
 	void Pipeline::createDescriptorSetLayout(const Device& device, const SwapChain& swapChain, const PipelineDescription& description, const RenderPass& renderPass)
 	{
-		//Descriptor Pool
-		std::array<VkDescriptorPoolSize, 2> poolSizes{};
-		poolSizes[0].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-		poolSizes[0].descriptorCount = static_cast<uint32_t>(swapChain.framesInFlight()) * std::max(1u, (uint32_t)description.uniforms().size());
-		poolSizes[1].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-		poolSizes[1].descriptorCount = static_cast<uint32_t>(swapChain.framesInFlight()) * std::max(1u, (uint32_t)description.textures().size());
-
-		VkDescriptorPoolCreateInfo poolInfo{};
-		poolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
-		poolInfo.poolSizeCount = static_cast<uint32_t>(poolSizes.size());
-		poolInfo.pPoolSizes = poolSizes.data();
-		poolInfo.maxSets = static_cast<uint32_t>(swapChain.framesInFlight());
-
-		if (vkCreateDescriptorPool(device.handle(), &poolInfo, nullptr, &_descriptorPool) != VK_SUCCESS) {
-			throw std::runtime_error("Error");
-		}
-
 		//Descriptor Set Layout
 		std::vector< VkDescriptorSetLayoutBinding> layoutBindings;
 		for (auto&& uniform : description.uniforms())
@@ -449,11 +432,6 @@ namespace vkl
 
 	}
 
-	VkDescriptorPool Pipeline::descriptorPoolHandle() const
-	{
-		return _descriptorPool;
-	}
-
 	VkDescriptorSetLayout Pipeline::descriptorSetLayoutHandle() const
 	{
 		return _descriptorSetLayout;
@@ -478,6 +456,5 @@ namespace vkl
 		vkDestroyPipeline(device.handle(), _pipeline, nullptr);
 		vkDestroyPipelineLayout(device.handle(), _pipelineLayout, nullptr);
 		vkDestroyDescriptorSetLayout(device.handle(), _descriptorSetLayout, nullptr);
-		vkDestroyDescriptorPool(device.handle(), _descriptorPool, nullptr);
 	}
 }

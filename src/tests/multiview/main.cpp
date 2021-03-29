@@ -155,6 +155,8 @@ struct VulkanWindow
 	void cleanUp(const vkl::Instance& instance)
 	{
 		device.waitIdle();
+		for (auto&& ro : renderObjects)
+			ro->cleanUp(device);
 		renderObjects.clear();
 		commandDispatcher.cleanUp(device);
 		pipelineManager.cleanUp(device);

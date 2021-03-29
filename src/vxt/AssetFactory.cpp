@@ -50,7 +50,10 @@ namespace vxt
 
 		std::error_code ec;
 		if (std::filesystem::exists(path, ec))
+		{
+			out = path;
 			return true;
+		}
 
 		for (auto&& sp : _searchPaths)
 		{

@@ -132,6 +132,8 @@ struct VulkanWindow
 	void cleanUp(const vkl::Instance& instance)
 	{
 		device.waitIdle();
+		for (auto&& ro : renderObjects)
+			ro->cleanUp(device);
 		renderObjects.clear();
 		commandDispatcher.cleanUp(device);
 		pipelineManager.cleanUp(device);
@@ -156,7 +158,7 @@ VulkanWindow buildWindow(const vkl::Instance& instance, const std::string& title
 	vkl::SwapChain swapChain(device, surface, swapChainOptions);
 
 	vkl::RenderPassOptions mainPassOptions;
-	mainPassOptions.clearColor = { 0.f, 0.f, 0.f, 1.f };
+	mainPassOptions.clearColor = { 0.2f, 0.2f, 0.2f, 1.f };
 	vkl::RenderPass mainPass(device, swapChain, mainPassOptions);
 
 	swapChain.registerRenderPass(device, mainPass);
@@ -188,10 +190,12 @@ int main(int argc, char* argv[])
 	VulkanWindow window = buildWindow(instance, "model_vkl");
 
 	window.manip.setSpeed(.1f);
+	window.manip.enableHeadlight(0);
 
 	vxt::AssetFactory::instance().addSearchPath((std::filesystem::path(VKL_DATA_DIR) / "models").make_preferred().string(), false);
 
 	auto model = vxt::AssetFactory::instance().deviceAsset<vxt::Model>("CesiumMan.glb", window.device, window.swapChain, window.bufferManager);
+	//auto model = vxt::AssetFactory::instance().deviceAsset<vxt::Model>("E:\\welderman.glb", window.device, window.swapChain, window.bufferManager);
 
 	if (!model)
 		return -1;

@@ -32,6 +32,7 @@ layout(location = 5) in vec4 weight0;
 layout (location = 0) out vec3 outNormal;
 layout (location = 1) out vec2 outUV0;
 layout (location = 2) out vec2 outUV1;
+layout (location = 3) out vec3 outViewPosition;
 
 void main() {
     
@@ -45,33 +46,127 @@ void main() {
 			weight0.w * u_joints.jointTransforms[int(joint0.w)];
 
 		locPos = u_mvp.model * u_mvp.shape * skinMat * vec4(pos, 1.0);
-		outNormal = normalize(transpose(inverse(mat3(u_mvp.model * u_mvp.shape * skinMat))) * normal);
+		outNormal = normalize(mat3(u_mvp.view * u_mvp.model * u_mvp.shape * skinMat) * normal);
 	} else {
 		locPos = u_mvp.model * u_mvp.shape * vec4(pos, 1.0);
-		outNormal = normalize(transpose(inverse(mat3(u_mvp.model * u_mvp.shape))) * normal);
+		outNormal = normalize(mat3(u_mvp.view * u_mvp.model * u_mvp.shape) * normal);
 	}
 
 	outUV0 = uv0;
 	outUV1 = uv1;
+	outViewPosition = (u_mvp.view * locPos).xyz;
 	gl_Position =  u_mvp.proj * u_mvp.view * locPos;
 }
 
 )Shader";
 
+	//Frag shader logic (mostly) taken from OpenGL 4 Shading Language Cookbook Third Edition
+    //https://github.com/PacktPublishing/OpenGL-4-Shading-Language-Cookbook-Third-Edition/blob/master/chapter04/shader/pbr.frag.glsl#L21
 	constexpr const char* FragShader = R"Shader(
 
 #version 450
 
-layout(binding = 2) uniform sampler2D texSampler;
+layout(binding = 2) uniform sampler2D baseColorSampler;
+
+layout(binding = 0) uniform MVP {
+	mat4 model;
+	mat4 view;
+	mat4 proj;
+	mat4 shape;
+} u_mvp;
+
+struct Light
+{
+	vec3 position;
+	vec3 color;
+	float power;
+	float attenuate;
+};
+
+#define MaxLights 8
+
+layout(binding = 3) uniform Lights {
+	Light[MaxLights] lights;
+} u_lights;
+
+layout(binding = 4) uniform PBRMaterial {
+	vec4 baseColorFactor;
+	float alphaCutoff;
+	float metallicFactor;
+	float roughnessFactor;
+	float alphaMode_opaque;
+	float alphaMode_mask;
+	float alphaMode_blend;
+} u_material;
+
 
 layout (location = 0) in vec3 normal;
 layout (location = 1) in vec2 uv0;
 layout (location = 2) in vec2 uv1;
+layout (location = 3) in vec3 viewPosition;
 
 layout(location = 0) out vec4 outColor;
 
+const float PI = 3.14159265358979323846;
+
+vec4 baseColor()
+{
+	return texture(baseColorSampler, uv0) * u_material.baseColorFactor; 
+}
+
+float ggxDistribution( float nDotH ) {
+  float alpha2 = u_material.roughnessFactor * u_material.roughnessFactor * u_material.roughnessFactor * u_material.roughnessFactor;
+  float d = (nDotH * nDotH) * (alpha2 - 1) + 1;
+  return alpha2 / (PI * d * d);
+}
+
+float geomSmith( float dotProd ) {
+  float k = (u_material.roughnessFactor + 1.0) * (u_material.roughnessFactor + 1.0) / 8.0;
+  float denom = dotProd * (1 - k) + k;
+  return 1.0 / denom;
+}
+
+vec3 schlickFresnel( float lDotH, vec3 baseColor ) {
+  vec3 f0 = mix(vec3(0.04), baseColor, u_material.metallicFactor);
+  return f0 + (1 - f0) * pow(1.0 - lDotH, 5);
+}
+
+vec3 microfacetModel( int lightIdx, vec3 position, vec3 n ) {  
+
+  vec3 baseColor = baseColor().xyz;
+  vec3 diffuseBrdf = mix(baseColor, vec3(0.04), u_material.metallicFactor);
+
+  vec3 l = vec3(0.0); 
+  vec3 lightI = vec3(u_lights.lights[lightIdx].power) * u_lights.lights[lightIdx].color;  //"intensity"
+
+  vec3 lightPosition = (u_mvp.view * u_mvp.model * vec4(u_lights.lights[lightIdx].position, 1.f)).xyz;
+
+  l = lightPosition - position;
+  float dist = length(l);
+  l = normalize(l);
+  
+  if(u_lights.lights[lightIdx].attenuate > 0.f)
+  {
+    lightI /= (dist * dist);
+  }
+
+  vec3 v = normalize( -position );
+  vec3 h = normalize( v + l );
+  float nDotH = dot( n, h );
+  float lDotH = dot( l, h );
+  float nDotL = max( dot( n, l ), 0.0 );
+  float nDotV = dot( n, v );
+  vec3 specBrdf = 0.25 * ggxDistribution(nDotH) * schlickFresnel(lDotH, baseColor) * geomSmith(nDotL) * geomSmith(nDotV);
+
+  return (diffuseBrdf + PI * specBrdf) * lightI * nDotL;
+}
+
 void main() {
-    outColor = texture(texSampler, uv0);
+	vec3 sum = vec3(0);
+	for( int i = 0; i < MaxLights; i++ ) {
+		sum += microfacetModel(i, viewPosition, normal);
+	}
+	outColor = vec4(sum, 1);
 }
 
 )Shader";
@@ -93,6 +188,8 @@ namespace {
 	constexpr uint32_t _Binding_MVP = 0;
 	constexpr uint32_t _Binding_Joints = 1;
 	constexpr uint32_t _Binding_BaseColorTexture = 2;
+	constexpr uint32_t _Binding_Lights = 3;
+	constexpr uint32_t _Binding_Material = 4;
 }
 
 namespace vxt
@@ -114,6 +211,8 @@ namespace vxt
 		
 		description.declareUniform(_Binding_MVP, sizeof(MVP));
 		description.declareUniform(_Binding_Joints, sizeof(Joints));
+		description.declareUniform(_Binding_Lights, sizeof(Lights));
+		description.declareUniform(_Binding_Material, sizeof(PBRMaterial));
 
 
 		description.declareTexture(_Binding_BaseColorTexture);
@@ -124,6 +223,8 @@ namespace vxt
 	{
 		_uniform = bufferManager.createTypedUniform<MVP>(device, swapChain);
 		_jointsUniform = bufferManager.createTypedUniform<Joints>(device, swapChain);
+		_lightsUniform = bufferManager.createTypedUniform<Lights>(device, swapChain);
+		_materialUniform = bufferManager.createTypedUniform<PBRMaterial>(device, swapChain);
 	}
 
 	void ModelShapeObject::setShape(const vkl::Device& device, const vkl::SwapChain& swapChain, std::shared_ptr<const Model> model, size_t index)
@@ -144,13 +245,26 @@ namespace vxt
 
 		_transform.shape = shape.transform;
 		addUniform(_uniform, _Binding_MVP);
-		addUniform(_jointsUniform, _Binding_Joints);
 		_jointsUniform->setData(_joints);
-
+		addUniform(_jointsUniform, _Binding_Joints);
+		_lightsUniform->setData(_lights);
+		addUniform(_lightsUniform, _Binding_Lights);
 		if (shape.material >= 0 && shape.material < model->getMaterials().size())
 		{
 			addTexture(model->getMaterials()[shape.material].baseColorTexture, _Binding_BaseColorTexture);
+
+			const auto& mat = model->getMaterials()[shape.material];
+			_material.alphaCutoff = mat.alphaCutoff;
+			_material.alphaMode_blend = mat.alphaMode == Model::Material::AlphaMode::ALPHAMODE_BLEND;
+			_material.alphaMode_mask = mat.alphaMode == Model::Material::AlphaMode::ALPHAMODE_MASK;
+			_material.alphaMode_opaque = mat.alphaMode == Model::Material::AlphaMode::ALPHAMODE_OPAQUE;
+			_material.baseColorFactor = mat.baseColorFactor;
+			_material.metallicFactor = mat.metallicFactor;
+			_material.roughnessFactor = mat.roughnessFactor;
 		}
+		_materialUniform->setData(_material);
+		addUniform(_materialUniform, _Binding_Material);
+
 	}
 	size_t ModelShapeObject::getShape() const
 	{
@@ -173,6 +287,12 @@ namespace vxt
 		}
 
 		_uniform->setData(_transform);
+
+		for (int i = 0; i < cam.lights().size(); ++i)
+		{
+			_lights.lights[i] = cam.lights()[i];
+		}
+		_lightsUniform->setData(_lights);
 
 	}
 

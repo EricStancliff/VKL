@@ -137,6 +137,8 @@ int main(int argc, char* argv[])
 	}
 
 	device.waitIdle();
+	for (auto&& ro : renderObjects)
+		ro->cleanUp(device);
 	renderObjects.clear();
 	commandDispatcher.cleanUp(device);
 	pipelineManager.cleanUp(device);

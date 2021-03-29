@@ -9,6 +9,8 @@
 #include <vkl/IndexBuffer.h>
 #include <vkl/PipelineFactory.h>
 
+#include <array>
+
 namespace vkl
 {
 	void RenderObject::recordCommands(const SwapChain& swapChain, const PipelineManager& pipelines, VkCommandBuffer buffer, const VkExtent2D& extent)
@@ -113,6 +115,11 @@ namespace vkl
 		return PipelineMetaFactory::instance().description(std::type_index(typeid(*this)));
 	}
 
+	void RenderObject::cleanUp(const Device& device)
+	{
+		vkDestroyDescriptorPool(device.handle(), _descriptorPool, nullptr);
+	}
+
 	void RenderObject::addVBO(std::shared_ptr<const VertexBuffer> vbo, uint32_t binding)
 	{
 		_vbos.push_back({ binding, vbo });
@@ -162,12 +169,37 @@ namespace vkl
 			return;
 		}
 
+		auto description = PipelineMetaFactory::instance().description(std::type_index(typeid(*this)));
+		if (!description)
+		{
+			throw std::runtime_error("Error");
+			return;
+		}
+
+		//Descriptor Pool
+		std::array<VkDescriptorPoolSize, 2> poolSizes{};
+		poolSizes[0].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+		poolSizes[0].descriptorCount = static_cast<uint32_t>(swapChain.framesInFlight()) * std::max(1u, (uint32_t)description->uniforms().size());
+		poolSizes[1].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+		poolSizes[1].descriptorCount = static_cast<uint32_t>(swapChain.framesInFlight()) * std::max(1u, (uint32_t)description->textures().size());
+
+		VkDescriptorPoolCreateInfo poolInfo{};
+		poolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
+		poolInfo.poolSizeCount = static_cast<uint32_t>(poolSizes.size());
+		poolInfo.pPoolSizes = poolSizes.data();
+		poolInfo.maxSets = static_cast<uint32_t>(swapChain.framesInFlight());
+
+		if (vkCreateDescriptorPool(device.handle(), &poolInfo, nullptr, &_descriptorPool) != VK_SUCCESS) {
+			throw std::runtime_error("Error");
+		}
+
+
 		_descriptorSets.resize(swapChain.framesInFlight());
 		std::vector<VkDescriptorSetLayout> layouts(swapChain.framesInFlight(), pipeline->descriptorSetLayoutHandle());
 
 		VkDescriptorSetAllocateInfo allocInfo{};
 		allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
-		allocInfo.descriptorPool = pipeline->descriptorPoolHandle();
+		allocInfo.descriptorPool = _descriptorPool;
 		allocInfo.descriptorSetCount = static_cast<uint32_t>(swapChain.framesInFlight());
 		allocInfo.pSetLayouts = layouts.data();
 

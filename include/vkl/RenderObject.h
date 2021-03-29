@@ -11,11 +11,14 @@ namespace vkl
 	{
 	public:
 		RenderObject() = default;
+		virtual ~RenderObject() = default;
 
 		virtual void recordCommands(const SwapChain& swapChain, const PipelineManager& pipelines, VkCommandBuffer buffer, const VkExtent2D& extent);
 		virtual void updateDescriptors(const Device& device, const SwapChain& swapChain, const PipelineManager& pipelines);
 
 		std::shared_ptr<const PipelineDescription> pipelineDescription() const;
+
+		void cleanUp(const Device& device);
 	protected:
 		void addVBO(std::shared_ptr<const VertexBuffer> vbo, uint32_t binding);
 		void addUniform(std::shared_ptr<const UniformBuffer> uniform, uint32_t binding);
@@ -36,6 +39,8 @@ namespace vkl
 		std::shared_ptr<const PushConstantBase> _pushConstant;
 
 		std::vector<VkDescriptorSet> _descriptorSets;
+		VkDescriptorPool _descriptorPool{ VK_NULL_HANDLE };
+
 		bool m_init{ false };
 	};
 }

@@ -68,6 +68,25 @@ namespace vxt
 		_speed = speed;
 	}
 
+	void FirstPersonManip::enableHeadlight(size_t index)
+	{
+		_headlight = index;
+	}
+
+	void FirstPersonManip::disableHeadlight()
+	{
+		_headlight = std::numeric_limits<size_t>::max();
+	}
+
+	bool FirstPersonManip::headlightEnabled() const
+	{
+		return _headlight != std::numeric_limits<size_t>::max();
+	}
+	size_t FirstPersonManip::headlight() const
+	{
+		return _headlight;
+	}
+
 	bool FirstPersonManip::rotate(const vkl::Window& window, Camera& camera)
 	{
 		if (_leftMouseDown && _lastMousePos != _mousePos)
@@ -191,6 +210,19 @@ namespace vxt
 		auto proj = glm::perspective(glm::radians(45.f), (float)window.width() / (float)window.height(), 0.1f, 1000.f);
 		proj[1][1] *= -1;
 		camera.setProjection(proj); //TEMP
+
+		if (headlightEnabled())
+		{
+			Light light;
+			light.attenuate = 0.f;
+			light.power = 1.f;
+			light.color = glm::one<glm::vec4>();
+
+			auto view = camera.view();
+			light.position = glm::inverse(view)[3];
+
+			camera.setLight(_headlight, light);
+		}
 	}
 
 

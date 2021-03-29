@@ -23,6 +23,11 @@ namespace vxt
 		float speed() const;
 		void setSpeed(float speed);
 
+		void enableHeadlight(size_t index);
+		void disableHeadlight();
+		bool headlightEnabled() const;
+		size_t headlight() const;
+
 	private:
 
 		void updateProjection(const vkl::Window& window, Camera& camera);
@@ -38,5 +43,6 @@ namespace vxt
 		bool _rightMouseDown{ false };
 
 		bool _init{ false };
+		size_t _headlight{ std::numeric_limits<size_t>::max() };
 	};
 }

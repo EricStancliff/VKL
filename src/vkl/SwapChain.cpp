@@ -395,8 +395,9 @@ namespace vkl
         submitInfo.signalSemaphoreCount = 1;
         submitInfo.pSignalSemaphores = signalSemaphores;
 
-        vkResetFences(device.handle(), 1, &_inFlightFences[_frameClamp]);
-
+        if (vkResetFences(device.handle(), 1, &_inFlightFences[_frameClamp]) != VK_SUCCESS) {
+            throw std::runtime_error("Error");
+        }
         if (vkQueueSubmit(device.graphicsQueueHandle(), 1, &submitInfo, _inFlightFences[_frameClamp]) != VK_SUCCESS) {
             throw std::runtime_error("Error");
         }

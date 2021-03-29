@@ -6,6 +6,7 @@
 #include <vkl/UniformBuffer.h>
 #include <vxt/VXT_EXPORT.h>
 #include <vkl/PipelineFactory.h>
+#include <vxt/Camera.h>
 
 namespace vxt
 {
@@ -48,12 +49,34 @@ namespace vxt
 			float jointCount{ 0.f };
 		};
 
+		struct Lights
+		{
+			LightArray lights;
+		};
+
+		struct PBRMaterial
+		{
+			alignas(16) glm::vec4 baseColorFactor = glm::vec4(1.0f);
+			alignas(4) float alphaCutoff = 1.0f;
+			alignas(4) float metallicFactor = 1.0f;
+			alignas(4) float roughnessFactor = 1.0f;
+
+			//To be treated as mutually exclusive
+			alignas(4) float alphaMode_opaque = 1.0f;
+			alignas(4) float alphaMode_mask = 0.0f;
+			alignas(4) float alphaMode_blend = 0.0f;
+		};
 
 		size_t _shapeIndex{ 0 };
 		MVP _transform;
 		Joints _joints;
+		Lights _lights;
+		PBRMaterial _material;
+
 		std::shared_ptr<vkl::TypedUniform<MVP>> _uniform;
 		std::shared_ptr<vkl::TypedUniform<Joints>> _jointsUniform;
+		std::shared_ptr<vkl::TypedUniform<Lights>> _lightsUniform;
+		std::shared_ptr<vkl::TypedUniform<PBRMaterial>> _materialUniform;
 	};
 
 	class VXT_EXPORT ModelRenderObject

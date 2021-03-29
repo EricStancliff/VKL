@@ -283,11 +283,11 @@ namespace vxt
 				Model::Material material;
 				if (auto find = mat.values.find("baseColorTexture"); find != mat.values.end()) {
 					material.baseColorTexture = _textureBuffers[find->second.TextureIndex()];
-					material.texCoordSets.baseColor = find->second.TextureTexCoord();
+					//material.texCoordSets.baseColor = find->second.TextureTexCoord();
 				}
 				if (auto find = mat.values.find("metallicRoughnessTexture"); find != mat.values.end()) {
 					material.metallicRoughnessTexture = _textureBuffers[find->second.TextureIndex()];
-					material.texCoordSets.metallicRoughness = find->second.TextureTexCoord();
+					//material.texCoordSets.metallicRoughness = find->second.TextureTexCoord();
 				}
 				if (auto find = mat.values.find("roughnessFactor"); find != mat.values.end()) {
 					material.roughnessFactor = static_cast<float>(find->second.Factor());
@@ -300,16 +300,16 @@ namespace vxt
 				}
 				if (auto find = mat.additionalValues.find("normalTexture"); find != mat.additionalValues.end()) {
 					material.normalTexture = _textureBuffers[find->second.TextureIndex()];
-					material.texCoordSets.normal = find->second.TextureTexCoord();
+					//material.texCoordSets.normal = find->second.TextureTexCoord();
 				}
-				if (auto find = mat.additionalValues.find("emissiveTexture"); find != mat.additionalValues.end()) {
-					material.emissiveTexture = _textureBuffers[find->second.TextureIndex()];
-					material.texCoordSets.emissive = find->second.TextureTexCoord();
-				}
-				if (auto find = mat.additionalValues.find("occlusionTexture"); find != mat.additionalValues.end()) {
-					material.occlusionTexture = _textureBuffers[find->second.TextureIndex()];
-					material.texCoordSets.occlusion = find->second.TextureTexCoord();
-				}
+				//if (auto find = mat.additionalValues.find("emissiveTexture"); find != mat.additionalValues.end()) {
+				//	material.emissiveTexture = _textureBuffers[find->second.TextureIndex()];
+				//	material.texCoordSets.emissive = find->second.TextureTexCoord();
+				//}
+				//if (auto find = mat.additionalValues.find("occlusionTexture"); find != mat.additionalValues.end()) {
+				//	material.occlusionTexture = _textureBuffers[find->second.TextureIndex()];
+				//	material.texCoordSets.occlusion = find->second.TextureTexCoord();
+				//}
 				if (auto find = mat.additionalValues.find("alphaMode"); find != mat.additionalValues.end()) {
 					const tinygltf::Parameter& param = find->second;
 					if (param.string_value == "BLEND") {
@@ -323,41 +323,41 @@ namespace vxt
 				if (auto find = mat.additionalValues.find("alphaCutoff"); find != mat.additionalValues.end()) {
 					material.alphaCutoff = static_cast<float>(find->second.Factor());
 				}
-				if (auto find = mat.additionalValues.find("emissiveFactor"); find != mat.additionalValues.end()) {
-					material.emissiveFactor = glm::vec4(glm::make_vec3(find->second.ColorFactor().data()), 1.0);
-					material.emissiveFactor = glm::vec4(0.0f);
-				}
+				//if (auto find = mat.additionalValues.find("emissiveFactor"); find != mat.additionalValues.end()) {
+				//	material.emissiveFactor = glm::vec4(glm::make_vec3(find->second.ColorFactor().data()), 1.0);
+				//	material.emissiveFactor = glm::vec4(0.0f);
+				//}
 
-				// Extensions
-				// @TODO: Find out if there is a nicer way of reading these properties with recent tinygltf headers
-				if (mat.extensions.find("KHR_materials_pbrSpecularGlossiness") != mat.extensions.end()) {
-					auto ext = mat.extensions.find("KHR_materials_pbrSpecularGlossiness");
-					if (ext->second.Has("specularGlossinessTexture")) {
-						auto index = ext->second.Get("specularGlossinessTexture").Get("index");
-						material.extension.specularGlossinessTexture = _textureBuffers[index.Get<int>()];
-						auto texCoordSet = ext->second.Get("specularGlossinessTexture").Get("texCoord");
-						material.texCoordSets.specularGlossiness = texCoordSet.Get<int>();
-						material.pbrWorkflows.specularGlossiness = true;
-					}
-					if (ext->second.Has("diffuseTexture")) {
-						auto index = ext->second.Get("diffuseTexture").Get("index");
-						material.extension.diffuseTexture = _textureBuffers[index.Get<int>()];
-					}
-					if (ext->second.Has("diffuseFactor")) {
-						auto factor = ext->second.Get("diffuseFactor");
-						for (uint32_t i = 0; i < factor.ArrayLen(); i++) {
-							auto val = factor.Get(i);
-							material.extension.diffuseFactor[i] = val.IsNumber() ? (float)val.Get<double>() : (float)val.Get<int>();
-						}
-					}
-					if (ext->second.Has("specularFactor")) {
-						auto factor = ext->second.Get("specularFactor");
-						for (uint32_t i = 0; i < factor.ArrayLen(); i++) {
-							auto val = factor.Get(i);
-							material.extension.specularFactor[i] = val.IsNumber() ? (float)val.Get<double>() : (float)val.Get<int>();
-						}
-					}
-				}
+				//// Extensions
+				//// @TODO: Find out if there is a nicer way of reading these properties with recent tinygltf headers
+				//if (mat.extensions.find("KHR_materials_pbrSpecularGlossiness") != mat.extensions.end()) {
+				//	auto ext = mat.extensions.find("KHR_materials_pbrSpecularGlossiness");
+				//	if (ext->second.Has("specularGlossinessTexture")) {
+				//		auto index = ext->second.Get("specularGlossinessTexture").Get("index");
+				//		material.extension.specularGlossinessTexture = _textureBuffers[index.Get<int>()];
+				//		auto texCoordSet = ext->second.Get("specularGlossinessTexture").Get("texCoord");
+				//		material.texCoordSets.specularGlossiness = texCoordSet.Get<int>();
+				//		material.pbrWorkflows.specularGlossiness = true;
+				//	}
+				//	if (ext->second.Has("diffuseTexture")) {
+				//		auto index = ext->second.Get("diffuseTexture").Get("index");
+				//		material.extension.diffuseTexture = _textureBuffers[index.Get<int>()];
+				//	}
+				//	if (ext->second.Has("diffuseFactor")) {
+				//		auto factor = ext->second.Get("diffuseFactor");
+				//		for (uint32_t i = 0; i < factor.ArrayLen(); i++) {
+				//			auto val = factor.Get(i);
+				//			material.extension.diffuseFactor[i] = val.IsNumber() ? (float)val.Get<double>() : (float)val.Get<int>();
+				//		}
+				//	}
+				//	if (ext->second.Has("specularFactor")) {
+				//		auto factor = ext->second.Get("specularFactor");
+				//		for (uint32_t i = 0; i < factor.ArrayLen(); i++) {
+				//			auto val = factor.Get(i);
+				//			material.extension.specularFactor[i] = val.IsNumber() ? (float)val.Get<double>() : (float)val.Get<int>();
+				//		}
+				//	}
+				//}
 
 				_materials.emplace_back(std::move(material));
 			}
