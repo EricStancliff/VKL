@@ -21,6 +21,8 @@ namespace vxt
 	constexpr size_t MaxNumJoints = 128;
 	using JointArray = glm::mat4[MaxNumJoints];
 
+	constexpr size_t MaxNumMorphTargets = 4;
+
 	class VXT_EXPORT Model : public DeviceAsset
 	{
 	public:
@@ -46,11 +48,19 @@ namespace vxt
 			glm::vec4 weight0;
 		};
 
+		struct MorphVertex {
+			glm::vec3 pos;
+			glm::vec3 normal;
+		};
+
+		using MorphTargetArray = std::array<std::vector<MorphVertex>, MaxNumMorphTargets>;
+
 		struct Primitive
 		{
 			std::shared_ptr<const vkl::DrawCall> draw;
 			glm::mat4 transform{ glm::identity<glm::mat4>() };
 			int material{ -1 };
+			glm::vec4 morphWeights{ glm::zero<glm::vec4>() };
 		};
 
 		Model() = default;
@@ -63,6 +73,9 @@ namespace vxt
 		virtual std::span<const Vertex> getVerts() const = 0;
 		virtual std::shared_ptr<const vkl::VertexBuffer> getVertexBuffer() const = 0;
 
+		virtual const MorphTargetArray& getMorphTargets() const = 0;
+		virtual const std::array<std::shared_ptr<const vkl::VertexBuffer>, MaxNumMorphTargets>& getMorphTargetBuffers() const = 0;
+
 		virtual std::span<const uint32_t> getIndices() const = 0;
 		virtual std::shared_ptr<const vkl::IndexBuffer> getIndexBuffer() const = 0;
 
@@ -72,6 +85,6 @@ namespace vxt
 		virtual bool supportsAnimations() const { return false; }
 		virtual bool supportsMorphTargets() const { return false; }
 
-		virtual bool animate(JointArray& joints, float& jointCount, glm::mat4& shapeTransform, size_t shape, std::string_view animation, double input, bool loop = true) const { return false; }
+		virtual bool animate(JointArray& joints, float& jointCount, glm::mat4& shapeTransform, glm::vec4& morphTargetWeights, size_t shape, std::string_view animation, double input, bool loop = true) const { return false; }
 	};
 }

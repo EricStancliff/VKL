@@ -87,6 +87,11 @@ namespace vxt
 		return _headlight;
 	}
 
+	bool FirstPersonManip::isFirstPersonNoMouseMode() const
+	{
+		return _leftMouseDown || _rightMouseDown;
+	}
+
 	bool FirstPersonManip::rotate(const vkl::Window& window, Camera& camera)
 	{
 		if (_leftMouseDown && _lastMousePos != _mousePos)

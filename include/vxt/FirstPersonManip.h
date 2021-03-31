@@ -28,6 +28,8 @@ namespace vxt
 		bool headlightEnabled() const;
 		size_t headlight() const;
 
+		bool isFirstPersonNoMouseMode() const;
+
 	private:
 
 		void updateProjection(const vkl::Window& window, Camera& camera);

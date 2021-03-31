@@ -48,6 +48,7 @@ namespace vkl
 		int x() const;
 		int y() const;
 
+		void setCursorHidden(bool hide);
 
 	private:
 		friend class Surface;

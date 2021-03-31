@@ -19,43 +19,80 @@ layout(binding = 0) uniform MVP {
 
 layout(binding = 1) uniform Joints {
 	mat4 jointTransforms[128];
+	vec4 morphWeights;
 	float jointCount;
+	float morphTargetCount;
 } u_joints;
 
-layout(location = 0) in vec3 pos;
-layout(location = 1) in vec3 normal;
-layout(location = 2) in vec2 uv0;
-layout(location = 3) in vec2 uv1;
-layout(location = 4) in vec4 joint0;
-layout(location = 5) in vec4 weight0;
+layout(location = 0) in vec3 a_pos;
+layout(location = 1) in vec3 a_norm;
+layout(location = 2) in vec2 a_uv0;
+layout(location = 3) in vec2 a_uv1;
+layout(location = 4) in vec4 a_joint0;
+layout(location = 5) in vec4 a_weight0;
 
-layout (location = 0) out vec3 outNormal;
-layout (location = 1) out vec2 outUV0;
-layout (location = 2) out vec2 outUV1;
-layout (location = 3) out vec3 outViewPosition;
+layout(location = 6) in vec3  a_morphPos0;
+layout(location = 7) in vec3  a_morphNorm0;
+layout(location = 8) in vec3  a_morphPos1;
+layout(location = 9) in vec3  a_morphNorm1;
+layout(location = 10) in vec3 a_morphPos2;
+layout(location = 11) in vec3 a_morphNorm2;
+layout(location = 12) in vec3 a_morphPos3;
+layout(location = 13) in vec3 a_morphNorm3;
+
+layout (location = 0) out vec3 o_normal;
+layout (location = 1) out vec2 o_uV0;
+layout (location = 2) out vec2 o_uV1;
+layout (location = 3) out vec3 o_viewPosition;
 
 void main() {
     
-	vec4 locPos;
-	if (u_joints.jointCount > 0.0) {
-		// Mesh is skinned
-		mat4 skinMat = 
-			weight0.x * u_joints.jointTransforms[int(joint0.x)] +
-			weight0.y * u_joints.jointTransforms[int(joint0.y)] +
-			weight0.z * u_joints.jointTransforms[int(joint0.z)] +
-			weight0.w * u_joints.jointTransforms[int(joint0.w)];
+	mat4 skinMat = mat4(1);
 
-		locPos = u_mvp.model * u_mvp.shape * skinMat * vec4(pos, 1.0);
-		outNormal = normalize(mat3(u_mvp.view * u_mvp.model * u_mvp.shape * skinMat) * normal);
-	} else {
-		locPos = u_mvp.model * u_mvp.shape * vec4(pos, 1.0);
-		outNormal = normalize(mat3(u_mvp.view * u_mvp.model * u_mvp.shape) * normal);
+	if(u_joints.jointCount > 0)
+	{
+	// Calculate skinned matrix from weights and joint indices of the current vertex
+	skinMat = 
+		a_weight0.x * u_joints.jointTransforms[int(a_joint0.x)] +
+		a_weight0.y * u_joints.jointTransforms[int(a_joint0.y)] +
+		a_weight0.z * u_joints.jointTransforms[int(a_joint0.z)] +
+		a_weight0.w * u_joints.jointTransforms[int(a_joint0.w)];
 	}
 
-	outUV0 = uv0;
-	outUV1 = uv1;
-	outViewPosition = (u_mvp.view * locPos).xyz;
-	gl_Position =  u_mvp.proj * u_mvp.view * locPos;
+	vec3 position = a_pos;
+	vec3 normal = a_norm;
+	
+	for(int i = 0; i < int(u_joints.morphTargetCount); ++i)
+	{
+		if(i == 0)
+		{
+			position += a_morphPos0 * u_joints.morphWeights[i];
+			normal += a_morphNorm0 * u_joints.morphWeights[i];
+		}
+		if(i == 1)
+		{
+			position += a_morphPos1 * u_joints.morphWeights[i];
+			normal += a_morphNorm1 * u_joints.morphWeights[i];		
+		}
+		if(i == 2)
+		{
+			position += a_morphPos2 * u_joints.morphWeights[i];
+			normal += a_morphNorm2 * u_joints.morphWeights[i];
+		}
+		if(i == 3)
+		{
+			position += a_morphPos3 * u_joints.morphWeights[i];
+			normal += a_morphNorm3 * u_joints.morphWeights[i];
+		}
+	}
+
+	o_viewPosition = (u_mvp.view * u_mvp.model * u_mvp.shape * skinMat * vec4(position, 1.f)).xyz;
+	o_normal = mat3(u_mvp.view * u_mvp.model * u_mvp.shape * skinMat) * normal;
+
+	o_uV0 = a_uv0;
+	o_uV1 = a_uv1;
+
+	gl_Position = u_mvp.proj * u_mvp.view * u_mvp.model * u_mvp.shape * skinMat * vec4(position, 1.f);
 }
 
 )Shader";
@@ -177,6 +214,10 @@ REGISTER_PIPELINE(vxt::ModelShapeObject, vxt::ModelShapeObject::describePipeline
 
 namespace {
 	constexpr uint32_t _Binding_VBO = 0;
+	constexpr uint32_t _Binding_Morph0 = 1;
+	constexpr uint32_t _Binding_Morph1 = 2;
+	constexpr uint32_t _Binding_Morph2 = 3;
+	constexpr uint32_t _Binding_Morph3 = 4;
 
 	constexpr uint32_t _Attribute_Pos = 0;
 	constexpr uint32_t _Attribute_Norm = 1;
@@ -184,6 +225,15 @@ namespace {
 	constexpr uint32_t _Attribute_UV1 = 3;
 	constexpr uint32_t _Attribute_Joint0 = 4;
 	constexpr uint32_t _Attribute_Weight0 = 5;
+
+	constexpr uint32_t _Attribute_Morph0_Pos  = 6;
+	constexpr uint32_t _Attribute_Morph0_Norm = 7;
+	constexpr uint32_t _Attribute_Morph1_Pos  = 8;
+	constexpr uint32_t _Attribute_Morph1_Norm = 9;
+	constexpr uint32_t _Attribute_Morph2_Pos  = 10;
+	constexpr uint32_t _Attribute_Morph2_Norm = 11;
+	constexpr uint32_t _Attribute_Morph3_Pos  = 12;
+	constexpr uint32_t _Attribute_Morph3_Norm = 13;
 
 	constexpr uint32_t _Binding_MVP = 0;
 	constexpr uint32_t _Binding_Joints = 1;
@@ -208,6 +258,16 @@ namespace vxt
 		description.declareVertexAttribute(_Binding_VBO, _Attribute_Joint0, VK_FORMAT_R32G32B32A32_SFLOAT, sizeof(Model::Vertex), offsetof(Model::Vertex, joint0));
 		description.declareVertexAttribute(_Binding_VBO, _Attribute_Weight0, VK_FORMAT_R32G32B32A32_SFLOAT, sizeof(Model::Vertex), offsetof(Model::Vertex, weight0));
 		
+
+		description.declareVertexAttribute(_Binding_Morph0, _Attribute_Morph0_Pos, VK_FORMAT_R32G32B32_SFLOAT, sizeof(Model::MorphVertex), offsetof(Model::MorphVertex, pos));
+		description.declareVertexAttribute(_Binding_Morph0, _Attribute_Morph0_Norm, VK_FORMAT_R32G32B32_SFLOAT, sizeof(Model::MorphVertex), offsetof(Model::MorphVertex, normal));
+		description.declareVertexAttribute(_Binding_Morph1, _Attribute_Morph1_Pos, VK_FORMAT_R32G32B32_SFLOAT, sizeof(Model::MorphVertex), offsetof(Model::MorphVertex, pos));
+		description.declareVertexAttribute(_Binding_Morph1, _Attribute_Morph1_Norm, VK_FORMAT_R32G32B32_SFLOAT, sizeof(Model::MorphVertex), offsetof(Model::MorphVertex, normal));
+		description.declareVertexAttribute(_Binding_Morph2, _Attribute_Morph2_Pos, VK_FORMAT_R32G32B32_SFLOAT, sizeof(Model::MorphVertex), offsetof(Model::MorphVertex, pos));
+		description.declareVertexAttribute(_Binding_Morph2, _Attribute_Morph2_Norm, VK_FORMAT_R32G32B32_SFLOAT, sizeof(Model::MorphVertex), offsetof(Model::MorphVertex, normal));
+		description.declareVertexAttribute(_Binding_Morph3, _Attribute_Morph3_Pos, VK_FORMAT_R32G32B32_SFLOAT, sizeof(Model::MorphVertex), offsetof(Model::MorphVertex, pos));
+		description.declareVertexAttribute(_Binding_Morph3, _Attribute_Morph3_Norm, VK_FORMAT_R32G32B32_SFLOAT, sizeof(Model::MorphVertex), offsetof(Model::MorphVertex, normal));
+
 		
 		description.declareUniform(_Binding_MVP, sizeof(MVP));
 		description.declareUniform(_Binding_Joints, sizeof(Joints));
@@ -244,6 +304,9 @@ namespace vxt
 		addDrawCall(shape.draw);
 
 		_transform.shape = shape.transform;
+		_joints.morphWeights = shape.morphWeights;
+		_joints.morphTargetCount = MaxNumMorphTargets;
+
 		addUniform(_uniform, _Binding_MVP);
 		_jointsUniform->setData(_joints);
 		addUniform(_jointsUniform, _Binding_Joints);
@@ -265,6 +328,12 @@ namespace vxt
 		_materialUniform->setData(_material);
 		addUniform(_materialUniform, _Binding_Material);
 
+		const auto& morphTargets = model->getMorphTargetBuffers();
+		addVBO(std::get<0>(morphTargets), _Binding_Morph0);
+		addVBO(std::get<1>(morphTargets), _Binding_Morph1);
+		addVBO(std::get<2>(morphTargets), _Binding_Morph2);
+		addVBO(std::get<3>(morphTargets), _Binding_Morph3);
+
 	}
 	size_t ModelShapeObject::getShape() const
 	{
@@ -280,7 +349,7 @@ namespace vxt
 
 		if (model->supportsAnimations())
 		{
-			if (model->animate(_joints.joints, _joints.jointCount, _transform.shape, _shapeIndex, animationName, animationInput))
+			if (model->animate(_joints.joints, _joints.jointCount, _transform.shape, _joints.morphWeights, _shapeIndex, animationName, animationInput))
 			{
 				_jointsUniform->setData(_joints);
 			}

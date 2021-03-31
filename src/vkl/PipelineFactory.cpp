@@ -30,7 +30,7 @@ namespace vkl
 		return true;
 	}
 	
-	std::shared_ptr<const PipelineDescription> PipelineMetaFactory::description(std::type_index type)
+	std::shared_ptr<const PipelineDescription> PipelineMetaFactory::description(std::type_index type) const
 	{
 		auto find = std::lower_bound(_descriptions.begin(), _descriptions.end(), type, [&](const auto& lhs, const auto& rhs) {
 			return lhs.first < rhs;

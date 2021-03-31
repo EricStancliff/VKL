@@ -46,7 +46,9 @@ namespace vxt
 		struct Joints
 		{
 			JointArray joints;
+			glm::vec4 morphWeights{glm::zero<glm::vec4>()};
 			float jointCount{ 0.f };
+			float morphTargetCount{ 0.f };
 		};
 
 		struct Lights

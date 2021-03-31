@@ -184,7 +184,7 @@ void updateWindow(VulkanWindow& window)
 
 int main(int argc, char* argv[])
 {
-	//one instance
+	//one instance  
 	vkl::Instance instance("model_vkl", true);
 
 	VulkanWindow window = buildWindow(instance, "model_vkl");
@@ -215,6 +215,7 @@ int main(int argc, char* argv[])
 		//TODO - fix this
 		window.window.clearLastFrame();
 		vkl::Window::pollEventsForAllWindows();
+		window.window.setCursorHidden(window.manip.isFirstPersonNoMouseMode());
 
 		window.manip.process(window.window, window.cam);
 		uint64_t millis = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();

@@ -22,6 +22,7 @@ namespace vxt
 
 
 		virtual bool process(const vkl::Window& window, Camera& camera) = 0;
+		virtual bool isFirstPersonNoMouseMode() const { return false; }
 
 	};
 

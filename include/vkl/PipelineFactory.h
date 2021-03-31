@@ -36,7 +36,7 @@ namespace vkl
 		std::span<const std::pair<std::type_index, std::shared_ptr<const PipelineDescription>>> allDescriptions() const;
 
 		bool registerPipeline(std::type_index type, std::shared_ptr<const PipelineDescription> description);
-		std::shared_ptr<const PipelineDescription> description(std::type_index type);
+		std::shared_ptr<const PipelineDescription> description(std::type_index type) const;
 
 	protected:
 		PipelineMetaFactory() = default;

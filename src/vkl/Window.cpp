@@ -504,6 +504,11 @@ namespace vkl
 		return _windowData->y;
 	}
 
+	void Window::setCursorHidden(bool hide)
+	{
+		glfwSetInputMode(_windowData->window, GLFW_CURSOR, hide ? GLFW_CURSOR_DISABLED : GLFW_CURSOR_NORMAL);
+	}
+
 	VkSurfaceKHR Window::createSurfaceHandle_Private(const Instance& instance) const
 	{
 		VkSurfaceKHR surface;

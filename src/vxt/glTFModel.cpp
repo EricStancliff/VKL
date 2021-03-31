@@ -158,7 +158,7 @@ namespace vxt
 		};
 		
 		struct AnimationChannel {
-			enum PathType { TRANSLATION, ROTATION, SCALE, MORPH };
+			enum PathType { TRANSLATION, ROTATION, SCALE, WEIGHTS };
 			PathType path;
 			int node;
 			uint32_t samplerIndex;
@@ -217,6 +217,12 @@ namespace vxt
 
 			_indexBuffer->setData(_indices);
 		
+			for (int i = 0; i < MaxNumMorphTargets; ++i)
+			{
+				_morphTargetBuffers[i] = bufferManager.createVertexBuffer(device, swapChain);
+				_morphTargetBuffers[i]->setData(_morphTargets[i].data(), sizeof(MorphVertex), _morphTargets[i].size());
+			}
+
 			return true;
 		}
 
@@ -435,6 +441,25 @@ namespace vxt
 							}
 							break;
 						}
+						case TINYGLTF_TYPE_SCALAR: {
+
+							//but how many?
+
+							size_t scalarCount = accessor.count / sampler.inputs.size();
+
+							float* buf = new float[accessor.count];
+							memcpy(buf, &buffer.data[accessor.byteOffset + bufferView.byteOffset], accessor.count * sizeof(float));
+							for (size_t index = 0; index < accessor.count;)
+							{
+								sampler.outputsVec4.push_back({});
+								for (int scalarIndex = 0; scalarIndex < scalarCount && scalarIndex < 4 && index < accessor.count; ++scalarIndex)
+								{
+									sampler.outputsVec4[sampler.outputsVec4.size() - 1][scalarIndex] = buf[index++];
+								}
+							}
+
+							break;
+						}
 						default: {
 							std::cout << "unknown type" << std::endl;
 							break;
@@ -459,8 +484,7 @@ namespace vxt
 						channel.path = AnimationChannel::PathType::SCALE;
 					}
 					if (source.target_path == "weights") {
-						std::cout << "weights not yet supported, skipping channel" << std::endl;
-						continue;
+						channel.path = AnimationChannel::PathType::WEIGHTS;
 					}
 					channel.samplerIndex = source.sampler;
 					channel.node = source.target_node;
@@ -660,6 +684,54 @@ namespace vxt
 						}
 					}
 
+					Model::Primitive prim;
+					if (!mesh.weights.empty())
+					{
+						for (int mtIndex = 0; mtIndex < MaxNumMorphTargets; ++mtIndex)
+						{
+							if (mtIndex >= mesh.weights.size())
+								break;
+
+							if (mtIndex >= primitive.targets.size())
+								break; //shouldn't happen
+
+							prim.morphWeights[mtIndex] = (float)mesh.weights[mtIndex];
+
+							const auto& target = primitive.targets[mtIndex];
+
+							const float* mt_bufferPos = nullptr;
+							const float* mt_bufferNormals = nullptr;
+
+							int mt_normByteStride = 0;
+
+							// Position attribute is required
+							assert(target.find("POSITION") != target.end());
+
+							const tinygltf::Accessor& mt_posAccessor = model.accessors[target.find("POSITION")->second];
+							const tinygltf::BufferView& mt_posView = model.bufferViews[mt_posAccessor.bufferView];
+							mt_bufferPos = reinterpret_cast<const float*>(&(model.buffers[mt_posView.buffer].data[mt_posAccessor.byteOffset + mt_posView.byteOffset]));
+							int mt_posByteStride = mt_posAccessor.ByteStride(mt_posView) ? (mt_posAccessor.ByteStride(mt_posView) / sizeof(float)) : tinygltf::GetTypeSizeInBytes(TINYGLTF_TYPE_VEC3);
+
+							if (target.find("NORMAL") != target.end()) {
+								const tinygltf::Accessor& mt_normAccessor = model.accessors[target.find("NORMAL")->second];
+								const tinygltf::BufferView& mt_normView = model.bufferViews[mt_normAccessor.bufferView];
+								mt_bufferNormals = reinterpret_cast<const float*>(&(model.buffers[mt_normView.buffer].data[mt_normAccessor.byteOffset + mt_normView.byteOffset]));
+								mt_normByteStride = mt_normAccessor.ByteStride(mt_normView) ? (mt_normAccessor.ByteStride(mt_normView) / sizeof(float)) : tinygltf::GetTypeSizeInBytes(TINYGLTF_TYPE_VEC3);
+							}
+
+							for (size_t v = 0; v < mt_posAccessor.count; v++) {
+								MorphVertex vert;
+								vert.pos = glm::make_vec3(&mt_bufferPos[v * mt_posByteStride]);
+								vert.normal = glm::vec3(mt_bufferNormals ? glm::make_vec3(&mt_bufferNormals[v * mt_normByteStride]) : glm::vec3(0.0f, 0.f, 0.f));
+								_morphTargets[mtIndex].push_back(vert);
+							}
+						}
+					}
+
+					for (auto&& mt : _morphTargets)
+						mt.resize(_verts.size(), {});
+
+
 					// Indices
 					if (hasIndices)
 					{
@@ -698,7 +770,6 @@ namespace vxt
 						}
 					}
 
-					Model::Primitive prim;
 					auto drawCall = std::make_shared<vkl::DrawCall>();
 					drawCall->setCount(indexCount);
 					drawCall->setOffset(indexStart);
@@ -750,7 +821,7 @@ namespace vxt
 		bool supportsAnimations() const override { return !_animations.empty(); }
 		bool supportsMorphTargets() const override { return false; }
 
-		bool animate(JointArray& joints, float& jointCount, glm::mat4& shapeTransform, size_t shape, std::string_view animationName, double input, bool loop) const override
+		bool animate(JointArray& joints, float& jointCount, glm::mat4& shapeTransform, glm::vec4& morphWeights, size_t shape, std::string_view animationName, double input, bool loop) const override
 		{
 			//find my animation
 			if (_animations.empty()) {
@@ -787,6 +858,8 @@ namespace vxt
 				return false;
 
 			std::vector<NodeTransform> nodeTransforms = _nodeTransforms;
+			morphWeights = _primitives[shape].morphWeights;
+
 
 			if (loop)
 			{
@@ -827,6 +900,15 @@ namespace vxt
 								q2.z = sampler.outputsVec4[i + 1].z;
 								q2.w = sampler.outputsVec4[i + 1].w;
 								nodeTransforms[channel.node].rot = glm::normalize(glm::slerp(q1, q2, (float)u));
+								break;
+							}
+							case AnimationChannel::PathType::WEIGHTS:
+							{
+								if (nodeIsChildRecursive(rootNode(shapeNode), channel.node))
+								{
+									for (int index = 0; index < MaxNumMorphTargets; ++index)
+										morphWeights[index] = glm::mix(sampler.outputsVec4[i][(int)index], sampler.outputsVec4[i + 1][(int)index], u);
+								}
 								break;
 							}
 							}
@@ -906,6 +988,28 @@ namespace vxt
 			return nullptr;
 		}
 
+		bool nodeIsChildRecursive(int rootA, int nodeB) const
+		{
+			for (auto child : _nodeChildren[rootA])
+			{
+				if (child == nodeB)
+					return true;
+				if (nodeIsChildRecursive(child, nodeB))
+					return true;
+			}
+			return false;
+		}
+
+		const MorphTargetArray& getMorphTargets() const override
+		{
+			return _morphTargets;
+		}
+
+		virtual const std::array<std::shared_ptr<const vkl::VertexBuffer>, MaxNumMorphTargets>& getMorphTargetBuffers() const
+		{
+			return *reinterpret_cast<const std::array<std::shared_ptr<const vkl::VertexBuffer>, MaxNumMorphTargets>*>(&_morphTargetBuffers);
+		}
+
 	private:
 
 
@@ -933,6 +1037,10 @@ namespace vxt
 		//animations
 		std::vector<Animation> _animations;
 		std::vector<Skin> _skins;
+
+		//Morph Targets
+		MorphTargetArray _morphTargets;
+		std::array<std::shared_ptr<vkl::VertexBuffer>, MaxNumMorphTargets> _morphTargetBuffers;
 	};
 
 	class VXT_EXPORT glTFDriver : public AssetDriver
