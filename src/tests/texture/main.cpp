@@ -130,7 +130,7 @@ public:
 		if (_imageData)
 			vxt::freeJPGData(_imageData);
 	}
-private:
+
 	std::vector<Vertex> _verts;
 	std::vector<uint32_t> _indices;
 	int _width{ 0 }, _height{ 0 }, _components{ 0 };
@@ -141,6 +141,7 @@ REGISTER_PIPELINE(ImagePlane, ImagePlane::describePipeline)
 
 int main(int argc, char* argv[])
 {
+
 	vkl::Instance instance("triangle_vkl", true);
 	vkl::Window window(1080, 720, "triangle_vkl");
 	vkl::Surface surface(instance, window);

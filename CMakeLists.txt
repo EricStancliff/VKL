@@ -30,8 +30,11 @@ InstallExternal(glfw3)
 InstallExternal_Ext(vulkan-memory-allocator unofficial-vulkan-memory-allocator)
 InstallExternalNoFind(stb)
 InstallExternalNoFind(tinygltf)
-
-#InstallExternal_Ext(shaderc glslang)
+#InstallExternal(rttr)
+#Ugh... Issue with rttr 0.9.6 which is the lastest official release so that's what's in vcpkg.  The below workaround has been solved for like two years.
+#if(MSVC)
+#set (CMAKE_CXX_FLAGS "/permissive /EHsc /Zc:twoPhase-")
+#endif()
 
 set(DEBUGGING_PATHS "%PATH%")
 set(DEBUGGING_PATHS "${DEBUGGING_PATHS};${EXTERNAL_DIR}/bin")
