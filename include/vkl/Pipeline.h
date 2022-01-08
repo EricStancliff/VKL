@@ -70,6 +70,10 @@ namespace vkl
 		std::span<const TextureDescription> textures() const;
 		VkPrimitiveTopology primitiveTopology() const;
 
+		bool depthEnabled() const;
+		void setDepthEnabled(bool enable);
+		VkCompareOp depthOp() const;
+		void setDepthOp(VkCompareOp op);
 	private:
 		std::vector< ShaderDescription> _shaders;
 		std::vector<VertexAttributeDescription> _attributes;
@@ -77,6 +81,8 @@ namespace vkl
 		PushConstantDescription _pushConstant;
 		std::vector<TextureDescription> _textures;
 		VkPrimitiveTopology _primitiveTopology{ VK_PRIMITIVE_TOPOLOGY_POINT_LIST };
+		bool _depth = true;
+		VkCompareOp _depthOp;
 	};
 	/*****************************************************************************************************************/
 

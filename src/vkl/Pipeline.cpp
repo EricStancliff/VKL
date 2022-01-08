@@ -186,6 +186,26 @@ namespace vkl
 		return _primitiveTopology;
 	}
 
+	bool PipelineDescription::depthEnabled() const
+	{
+		return _depth;
+	}
+
+	void PipelineDescription::setDepthEnabled(bool enable)
+	{
+		_depth = enable;
+	}
+
+	VkCompareOp PipelineDescription::depthOp() const
+	{
+		return _depthOp;
+	}
+
+	void PipelineDescription::setDepthOp(VkCompareOp op)
+	{
+		_depthOp = op;
+	}
+
 	std::span<const PipelineDescription::ShaderDescription> PipelineDescription::shaders() const
 	{
 		return _shaders;
@@ -337,9 +357,9 @@ namespace vkl
 
 		VkPipelineDepthStencilStateCreateInfo depthStencil{};
 		depthStencil.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
-		depthStencil.depthTestEnable = VK_TRUE;
+		depthStencil.depthTestEnable = description.depthEnabled();
 		depthStencil.depthWriteEnable = VK_TRUE;
-		depthStencil.depthCompareOp = VK_COMPARE_OP_LESS;
+		depthStencil.depthCompareOp = description.depthOp();
 		depthStencil.depthBoundsTestEnable = VK_FALSE;
 		depthStencil.stencilTestEnable = VK_FALSE;
 

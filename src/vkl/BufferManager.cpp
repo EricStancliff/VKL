@@ -19,15 +19,58 @@ namespace vkl
 
 	void BufferManager::update(const Device& device, const SwapChain& swapChain)
 	{
-		for (auto&& ib : _indexBuffers)
-			ib->update(device, swapChain);
-		for (auto&& vbo : _vertexBuffers)
-			vbo->update(device, swapChain);
-		for (auto&& ubo : _uniformBuffers)
-			ubo->update(device, swapChain);
-		for (auto&& tex : _textureBuffers)
-			tex->update(device, swapChain);
-
+		for (auto itr = _indexBuffers.begin(); itr != _indexBuffers.end();)
+		{
+			if (itr->use_count() == 1)
+			{
+				(*itr)->cleanUp(device);
+				itr = _indexBuffers.erase(itr);
+			}
+			else
+			{
+				(*itr)->update(device, swapChain);
+				++itr;
+			}
+		}
+		for (auto itr = _uniformBuffers.begin(); itr != _uniformBuffers.end();)
+		{
+			if (itr->use_count() == 1)
+			{
+				(*itr)->cleanUp(device);
+				itr = _uniformBuffers.erase(itr);
+			}
+			else
+			{
+				(*itr)->update(device, swapChain);
+				++itr;
+			}
+		}
+		for (auto itr = _vertexBuffers.begin(); itr != _vertexBuffers.end();)
+		{
+			if (itr->use_count() == 1)
+			{
+				(*itr)->cleanUp(device);
+				itr = _vertexBuffers.erase(itr);
+			}
+			else
+			{
+				(*itr)->update(device, swapChain);
+				++itr;
+			}
+		}
+		for (auto itr = _textureBuffers.begin(); itr != _textureBuffers.end();)
+		{
+			if (itr->use_count() == 1)
+			{
+				(*itr)->cleanUp(device);
+				itr = _textureBuffers.erase(itr);
+			}
+			else
+			{
+				(*itr)->update(device, swapChain);
+				++itr;
+			}
+		}
 	}
 
 	std::shared_ptr<IndexBuffer> BufferManager::createIndexBuffer(const Device& device, const SwapChain& swapChain)
