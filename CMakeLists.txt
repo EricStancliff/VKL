@@ -42,6 +42,7 @@ set(VCPKG_TOOLCHAIN_FILE "${vcpkg_SOURCE_DIR}/scripts/buildsystems/vcpkg.cmake" 
 InitVcpkg()
 get_property(VCPKG_TARGET_TRIPLET GLOBAL PROPERTY VCPKG_TARGET_TRIPLET)
 set(EXTERNAL_DIR ${CMAKE_CURRENT_BINARY_DIR}/external/${VCPKG_TARGET_TRIPLET})
+set_property(GLOBAL PROPERTY EXTERNAL_DIR ${EXTERNAL_DIR})
 
 set(vkl_include_dir ${CMAKE_CURRENT_SOURCE_DIR}/include)
 
