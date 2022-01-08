@@ -20,9 +20,28 @@ find_package(Vulkan REQUIRED)
 
 set(VKL_DATA_DIR ${CMAKE_CURRENT_SOURCE_DIR}/data)
 
+#pull and bootstrap vcpkg
+message(STATUS "Pulling and Bootstrapping VcPkg from github")
+include(FetchContent)
+FetchContent_Declare(
+  VCPKG
+  GIT_REPOSITORY https://github.com/microsoft/vcpkg.git
+  GIT_TAG        2021.12.01
+)
+FetchContent_MakeAvailable(VCPKG)
+
+if(MSVC)
+execute_process(COMMAND ${vcpkg_SOURCE_DIR}/bootstrap-vcpkg.bat  OUTPUT_VARIABLE OUTPUT_STRING)
+else()
+execute_process(COMMAND ${vcpkg_SOURCE_DIR}/bootstrap-vcpkg.sh  OUTPUT_VARIABLE OUTPUT_STRING)
+endif()
+
+set(VCPKG_TOOLCHAIN_FILE "${vcpkg_SOURCE_DIR}/scripts/buildsystems/vcpkg.cmake" CACHE FILEPATH "Path to your vcpkg toolchain file.")
+
+
 InitVcpkg()
 get_property(VCPKG_TARGET_TRIPLET GLOBAL PROPERTY VCPKG_TARGET_TRIPLET)
-set(EXTERNAL_DIR ${CMAKE_CURRENT_SOURCE_DIR}/external/${VCPKG_TARGET_TRIPLET})
+set(EXTERNAL_DIR ${CMAKE_CURRENT_BINARY_DIR}/external/${VCPKG_TARGET_TRIPLET})
 
 set(vkl_include_dir ${CMAKE_CURRENT_SOURCE_DIR}/include)
 

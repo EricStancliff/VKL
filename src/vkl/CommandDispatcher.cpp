@@ -10,11 +10,6 @@
 #include <array>
 
 #define MULTITHREADED
-#define TBB_THREADING
-
-#ifdef TBB_THREADING
-#include <tbb/parallel_for.h>
-#endif
 
 namespace vkl
 {
@@ -46,6 +41,8 @@ namespace vkl
 				throw std::runtime_error("Error");
 			}
 
+			_running = true;
+			_thread = std::make_unique<std::thread>([this] {run(); });
 		}
 		CommandThread() = delete;
 		~CommandThread() = default;
@@ -54,13 +51,7 @@ namespace vkl
 		CommandThread& operator=(CommandThread&&) noexcept = default;
 		CommandThread& operator=(const CommandThread&) = delete;
 
-		void startThread()
-		{
-			_running = true;
-			_thread = std::make_unique<std::thread>([this] {run(); });
-		}
-
-		void begin(const PipelineManager& pipelines, const RenderPass& pass, const SwapChain& swapChain, VkFramebuffer frameBuffer, const VkExtent2D& extent)
+		VkCommandBuffer processObjectsNow(std::span<const std::shared_ptr<RenderObject>> objects, const PipelineManager& pipelines, const RenderPass& pass, const SwapChain& swapChain, VkFramebuffer frameBuffer, const VkExtent2D& extent)
 		{
 			VkCommandBufferInheritanceInfo inherit{};
 			inherit.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_INHERITANCE_INFO;
@@ -84,40 +75,28 @@ namespace vkl
 			viewport.maxDepth = 1.0;
 			vkCmdSetViewport(_commandBuffers[swapChain.frame()], 0, 1, &viewport);
 
-		}
 
-		VkCommandBuffer end(const PipelineManager& pipelines, const RenderPass& pass, const SwapChain& swapChain, VkFramebuffer frameBuffer, const VkExtent2D& extent)
-		{
+			for (auto&& object : objects)
+			{
+				object->recordCommands(swapChain, pipelines, _commandBuffers[swapChain.frame()], extent);
+			}
+
 			if (vkEndCommandBuffer(_commandBuffers[swapChain.frame()]) != VK_SUCCESS) {
 				throw std::runtime_error("Error");
 			}
 
 			return _commandBuffers[swapChain.frame()];
 		}
-		void processObjectsNow(std::span<const std::shared_ptr<RenderObject>> objects, const Device& device, const PipelineManager& pipelines, const RenderPass& pass, const SwapChain& swapChain, VkFramebuffer frameBuffer, const VkExtent2D& extent)
-		{
-			for (auto&& object : objects)
-			{
-				object->updateDescriptors(device, swapChain, pipelines);
-				object->recordCommands(swapChain, pipelines, _commandBuffers[swapChain.frame()], extent);
-			}
-		}
-		void processObjectNow(RenderObject& object, const PipelineManager& pipelines, const Device& device, const RenderPass& pass, const SwapChain& swapChain, VkFramebuffer frameBuffer, const VkExtent2D& extent)
-		{
-			object.updateDescriptors(device, swapChain, pipelines);
-			object.recordCommands(swapChain, pipelines, _commandBuffers[swapChain.frame()], extent);
-		}
 
-		std::future<bool> processObjects(std::span<const std::shared_ptr<RenderObject>> objects, const Device& device, const PipelineManager& pipelines, const RenderPass& pass, const SwapChain& swapChain, VkFramebuffer frameBuffer, const VkExtent2D& extent)
+		std::future<VkCommandBuffer> processObjects(std::span<const std::shared_ptr<RenderObject>> objects, const PipelineManager& pipelines, const RenderPass& pass, const SwapChain& swapChain, VkFramebuffer frameBuffer, const VkExtent2D& extent)
 		{
-			std::future<bool> future;
-			auto promise = std::make_shared<std::promise<bool>>();
+			std::future<VkCommandBuffer> future;
+			auto promise = std::make_shared<std::promise<VkCommandBuffer>>();
 			future = promise->get_future();
 			{
 				std::unique_lock<std::mutex> lock(_mutex);
-				_tasks.emplace_back([objects, &pipelines, &pass, &swapChain, frameBuffer, &extent, &device, promise, this]() {
-					processObjectsNow(objects, device, pipelines, pass, swapChain, frameBuffer, extent);
-					promise->set_value(true);
+				_tasks.emplace_back([objects, &pipelines, &pass, &swapChain, frameBuffer, &extent, promise, this]() {
+					promise->set_value(processObjectsNow(objects, pipelines, pass, swapChain, frameBuffer, extent));
 					});
 			}
 			_condition.notify_all();
@@ -130,19 +109,15 @@ namespace vkl
 		}
 		void cleanUp(const Device& device)
 		{
-			bool killThread = false;
 			{
 				std::unique_lock<std::mutex> lock(_mutex);
-				killThread = _running;
 				_running = false;
 			}
-			if (killThread)
-			{
-				_condition.notify_all();
 
-				_thread->join();
-				_thread = nullptr;
-			}
+			_condition.notify_all();
+
+			_thread->join();
+			_thread = nullptr;
 
 			vkFreeCommandBuffers(device.handle(), _commandPool, (uint32_t)_commandBuffers.size(), _commandBuffers.data());
 			vkDestroyCommandPool(device.handle(), _commandPool, nullptr);
@@ -181,7 +156,7 @@ namespace vkl
 		std::mutex _mutex;
 		std::condition_variable _condition;
 		std::vector < std::function<void()>> _tasks;
-		
+
 	};
 
 
@@ -195,17 +170,12 @@ namespace vkl
 		for (unsigned int i = 0; i < threadCount; ++i)
 		{
 			_threads.emplace_back(std::move(std::make_unique<CommandThread>(device, swapChain)));
-#ifdef MULTITHREADED
-#ifndef TBB_THREADING
-			_threads.back()->startThread();
-#endif
-#endif
 		}
 
 
 		VkCommandPoolCreateInfo poolInfo{};
 		poolInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
-		poolInfo.queueFamilyIndex = swapChain.graphicsFamilyQueueIndex();   
+		poolInfo.queueFamilyIndex = swapChain.graphicsFamilyQueueIndex();
 		poolInfo.flags = VK_COMMAND_POOL_CREATE_TRANSIENT_BIT | VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
 
 		if (vkCreateCommandPool(device.handle(), &poolInfo, nullptr, &_commandPool) != VK_SUCCESS) {
@@ -233,48 +203,30 @@ namespace vkl
 	}
 	void CommandDispatcher::processUnsortedObjects(std::span< std::shared_ptr<RenderObject>> objects, const Device& device, const PipelineManager& pipelines, const RenderPass& pass, const SwapChain& swapChain, VkFramebuffer frameBuffer, const VkExtent2D& extent)
 	{
+		for (auto&& ro : objects)
+			ro->updateDescriptors(device, swapChain, pipelines);
 
 #ifdef MULTITHREADED
+		//record commands
 		size_t objectCount = objects.size();
 		size_t objectsPerThread = objectCount / _threads.size() + 1;
 
+		size_t offset = 0;
+		size_t threadIndex = 0;
 		std::vector<VkCommandBuffer> buffers;
-#ifdef TBB_THREADING
-		tbb::parallel_for(tbb::blocked_range<size_t>(0, _threads.size()), [&](const tbb::blocked_range<size_t>& r)
-			{
-				for (size_t i = r.begin(); i != r.end(); ++i)
-				{
-					size_t offset = (i * objectsPerThread);
-					auto objsToDo = std::min(objectsPerThread, objects.size() - offset);
-					_threads[i]->begin(pipelines, pass, swapChain, frameBuffer, extent);
-					_threads[i]->processObjectsNow(objects.subspan(offset, objsToDo), device, pipelines, pass, swapChain, frameBuffer, extent);
-					VkCommandBuffer buffer = _threads[i]->end(pipelines, pass, swapChain, frameBuffer, extent);
-					buffers.push_back(buffer);
-				}
-	});
-#else
-		std::vector<std::future<bool>> futures;
-		for (size_t i = 0; i < _threads.size(); ++i)
+		std::vector<std::future<VkCommandBuffer>> futures;
+		while (offset < objects.size())
 		{
-			size_t offset = (i * objectsPerThread);
 			auto objsToDo = std::min(objectsPerThread, objects.size() - offset);
-			_threads[i]->begin(pipelines, pass, swapChain, frameBuffer, extent);
-			futures.push_back(_threads[i]->processObjects(objects.subspan(offset, objsToDo), device, pipelines, pass, swapChain, frameBuffer, extent));
+			futures.emplace_back(_threads[threadIndex]->processObjects(objects.subspan(offset, objsToDo), pipelines, pass, swapChain, frameBuffer, extent));
+			offset += objsToDo;
+			++threadIndex;
 		}
 		for (auto&& future : futures)
-			future.get();
-		for (auto&& thread : _threads)
-			buffers.push_back(thread->end(pipelines, pass, swapChain, frameBuffer, extent));
-
-#endif
+			buffers.push_back(future.get());
 #else
-		for (auto&& ro : objects)
-			ro->updateDescriptors(device, swapChain, pipelines);
-		_threads[0]->begin(pipelines, pass, swapChain, frameBuffer, extent);
-		_threads[0]->processObjectsNow(objects, device, pipelines, pass, swapChain, frameBuffer, extent);
-		std::vector<VkCommandBuffer> buffers;
-		VkCommandBuffer buffer = _threads[0]->end(pipelines, pass, swapChain, frameBuffer, extent);
-		buffers.push_back(buffer);
+		VkCommandBuffer buffer = VK_NULL_HANDLE;
+		buffer = _threads[0]->processObjectsNow(objects, pipelines, pass, swapChain, frameBuffer, extent);
 #endif
 
 		VkCommandBufferBeginInfo beginInfo{};
@@ -301,7 +253,11 @@ namespace vkl
 
 		vkCmdBeginRenderPass(_primaryBuffers[swapChain.frame()], &renderPassInfo, VK_SUBPASS_CONTENTS_SECONDARY_COMMAND_BUFFERS);
 
+#ifdef MULTITHREADED
 		vkCmdExecuteCommands(_primaryBuffers[swapChain.frame()], (uint32_t)buffers.size(), buffers.data());
+#else
+		vkCmdExecuteCommands(_primaryBuffers[swapChain.frame()], 1, &buffer);
+#endif
 
 		vkCmdEndRenderPass(_primaryBuffers[swapChain.frame()]);
 
