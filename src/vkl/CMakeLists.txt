@@ -54,7 +54,7 @@ else()
 set(SHADERC_LIB ${VULKAN_LIB_DIR}/libshaderc_shared.so)
 endif()
 
-target_link_libraries(vkl PUBLIC unofficial::vulkan-memory-allocator::vulkan-memory-allocator glfw Vulkan::Vulkan ${SHADERC_LIB} glm::glm TBB::tbb)
+target_link_libraries(vkl PUBLIC unofficial::vulkan-memory-allocator::vulkan-memory-allocator glfw Vulkan::Vulkan ${SHADERC_LIB} TBB::tbb)
 
 target_compile_definitions(vkl PRIVATE VKL_LIB)
 target_include_directories(vkl PUBLIC ${vkl_include_dir} ${Vulkan_INCLUDE_DIR} "${EXTERNAL_DIR}/include" PRIVATE )

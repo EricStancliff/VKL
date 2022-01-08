@@ -24,7 +24,9 @@ set(vxt_includes
 
 add_library(vxt SHARED ${vxt_source} ${vxt_includes})
 
-target_link_libraries(vxt PUBLIC vkl glm)
+find_package(glm CONFIG REQUIRED)
+
+target_link_libraries(vxt PUBLIC vkl glm::glm)
 
 target_compile_definitions(vxt PRIVATE VXT_LIB -DVKL_DATA_DIR="${VKL_DATA_DIR}")
 target_include_directories(vxt PUBLIC ${vxt_include_dir})
