@@ -27,4 +27,16 @@ namespace vxt
     {
         stbi_image_free(data);
     }
+    VXT_EXPORT void* loadJPGData_fromMem(const void* data, size_t size, int& width, int& height, int& channels)
+    {
+        auto retVal = (void*)stbi_load_from_memory((const stbi_uc*)data, (int)size, &width, &height, &channels, STBI_rgb_alpha);
+        channels = 4;
+        return retVal;
+    }
+    VXT_EXPORT void* loadPNGData_fromMem(const void* data, size_t size, int& width, int& height, int& channels)
+    {
+        auto retVal = (void*)stbi_load_from_memory((const stbi_uc*)data, (int)size, &width, &height, &channels, STBI_rgb_alpha);
+        channels = 4;
+        return retVal;
+    }
 }
