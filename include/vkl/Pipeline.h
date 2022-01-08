@@ -82,7 +82,7 @@ namespace vkl
 		std::vector<TextureDescription> _textures;
 		VkPrimitiveTopology _primitiveTopology{ VK_PRIMITIVE_TOPOLOGY_POINT_LIST };
 		bool _depth = true;
-		VkCompareOp _depthOp;
+		VkCompareOp _depthOp = VK_COMPARE_OP_LESS;
 	};
 	/*****************************************************************************************************************/
 
