@@ -9,10 +9,16 @@
 
 namespace vkl
 {
+#ifdef NDEBUG
+    const std::vector<const char*> g_validationLayers = {
+    "VK_LAYER_LUNARG_monitor"
+    };
+#else
     const std::vector<const char*> g_validationLayers = {
     "VK_LAYER_KHRONOS_validation",
     "VK_LAYER_LUNARG_monitor"
-    };
+};
+#endif
 
 
     bool checkValidationLayerSupport() {

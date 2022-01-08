@@ -408,7 +408,7 @@ namespace vkl
         presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
 
         presentInfo.waitSemaphoreCount = 1;
-        presentInfo.pWaitSemaphores = signalSemaphores;
+        presentInfo.pWaitSemaphores = signalSemaphores;  
 
         VkSwapchainKHR swapChains[] = { _swapchain };
         presentInfo.swapchainCount = 1;

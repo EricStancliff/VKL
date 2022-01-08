@@ -19,6 +19,8 @@
 #include <vxt/Model.h>
 #include <vxt/ModelRenderObject.h>
 
+#include <tbb/parallel_for.h>
+
 constexpr const char* VertShader = R"Shader(
 
 #version 450
@@ -182,6 +184,30 @@ void updateWindow(VulkanWindow& window)
 	window.swapChain.swap(window.device, window.surface, window.commandDispatcher, window.mainPass, window.window.getWindowSize());
 }
 
+bool seedRandom()
+{
+	std::srand((unsigned int)std::time(0));
+	return true;
+}
+float fRand(float fMin, float fMax)
+{
+	float f = (float)rand() / RAND_MAX;
+	return fMin + f * (fMax - fMin);
+}
+glm::vec3 randomPosition()
+{
+	static bool seeded = seedRandom();
+	if (seeded)
+	{
+		glm::vec3 position;
+		position.x = fRand(-50, 50);
+		position.y = 0;
+		position.z = fRand(-50, 50);
+		return position;
+	}
+	return {};
+}
+
 int main(int argc, char* argv[])
 {
 	//one instance  
@@ -200,10 +226,24 @@ int main(int argc, char* argv[])
 	if (!model)
 		return -1;
 
-	auto modelObject = std::make_shared<vxt::ModelRenderObject>();
-  	modelObject->setModel(window.device, window.swapChain, window.bufferManager, window.pipelineManager, model);
-	for (auto&& shape : modelObject->shapes())
-		window.renderObjects.push_back(shape);
+	std::vector<std::shared_ptr<vxt::ModelRenderObject>> models;
+#ifdef NDEBUG
+	constexpr int numModels = 500;
+#else
+	constexpr int numModels = 20;
+#endif
+	glm::mat4 transform = glm::identity<glm::mat4>();
+	for (int i = 0; i < numModels; ++i)
+	{
+		auto modelObject = std::make_shared<vxt::ModelRenderObject>();
+		modelObject->setModel(window.device, window.swapChain, window.bufferManager, window.pipelineManager, model);
+		for (auto&& shape : modelObject->shapes())
+			window.renderObjects.push_back(shape);
+
+		transform[3] = glm::vec4(randomPosition(), 1);
+		modelObject->setTransform(transform);
+		models.push_back(modelObject);
+	}
 
 	auto axis = std::make_shared<Axis>(window.device, window.swapChain, window.pipelineManager, window.bufferManager);
 	window.renderObjects.push_back(axis);
@@ -220,8 +260,14 @@ int main(int argc, char* argv[])
 		window.manip.process(window.window, window.cam);
 		uint64_t millis = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
 		double seconds = (double)millis / 1000.f;
-		modelObject->animate("", seconds);
-		modelObject->update(window.device, window.swapChain, window.cam);
+		tbb::parallel_for(tbb::blocked_range<size_t>(0, models.size()), [&](const tbb::blocked_range<size_t>& r)
+			{
+				for (size_t i = r.begin(); i != r.end(); ++i)
+				{
+					models[i]->animate("", seconds);
+					models[i]->update(window.device, window.swapChain, window.cam);
+				}
+			});
 		axis->update(window.cam);
 		updateWindow(window);
 	}

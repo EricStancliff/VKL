@@ -9,7 +9,7 @@ set(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} /WX")
 add_compile_options(/wd4251)
 endif()
 
-set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_SOURCE_DIR}/cmake)
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 include(TargetSettings)
 include(InstallVcpkgLibrary)
 
@@ -18,11 +18,11 @@ set(VKL_OUTPUT_DIR ${CMAKE_CURRENT_BINARY_DIR}/bin)
 #Vulkan SDK needs to be "installed" on your machine w/o our help
 find_package(Vulkan REQUIRED)
 
-set(VKL_DATA_DIR ${CMAKE_SOURCE_DIR}/data)
+set(VKL_DATA_DIR ${CMAKE_CURRENT_SOURCE_DIR}/data)
 
 InitVcpkg()
 get_property(VCPKG_TARGET_TRIPLET GLOBAL PROPERTY VCPKG_TARGET_TRIPLET)
-set(EXTERNAL_DIR ${CMAKE_SOURCE_DIR}/external/${VCPKG_TARGET_TRIPLET})
+set(EXTERNAL_DIR ${CMAKE_CURRENT_SOURCE_DIR}/external/${VCPKG_TARGET_TRIPLET})
 
 
 InstallExternal(glm)
@@ -30,6 +30,7 @@ InstallExternal(glfw3)
 InstallExternal_Ext(vulkan-memory-allocator unofficial-vulkan-memory-allocator)
 InstallExternalNoFind(stb)
 InstallExternalNoFind(tinygltf)
+InstallExternal(tbb)
 #InstallExternal(rttr)
 #Ugh... Issue with rttr 0.9.6 which is the lastest official release so that's what's in vcpkg.  The below workaround has been solved for like two years.
 #if(MSVC)
@@ -39,6 +40,11 @@ InstallExternalNoFind(tinygltf)
 set(DEBUGGING_PATHS "%PATH%")
 set(DEBUGGING_PATHS "${DEBUGGING_PATHS};${EXTERNAL_DIR}/bin")
 set_property(GLOBAL PROPERTY DEBUGGING_PATHS ${DEBUGGING_PATHS})
+
+set(DEBUGGING_PATHS_DEBUG "%PATH%")
+set(DEBUGGING_PATHS_DEBUG "${DEBUGGING_PATHS_DEBUG};${EXTERNAL_DIR}/debug/bin")
+set_property(GLOBAL PROPERTY DEBUGGING_PATHS_DEBUG ${DEBUGGING_PATHS_DEBUG})
+
 
 get_filename_component(VULKAN_LIB_DIR ${Vulkan_LIBRARY} DIRECTORY)
 if(WIN32)
@@ -50,6 +56,7 @@ get_filename_component(VULKAN_LAYERS_PATH_ABS ${VULKAN_LAYERS_PATH} ABSOLUTE)
 
 set(DEBUGGER_ENV "VK_LAYER_PATH=${VULKAN_LAYERS_PATH_ABS}")
 set_property(GLOBAL PROPERTY DEBUGGER_ENV ${DEBUGGER_ENV})
+set_property(GLOBAL PROPERTY DEBUGGER_ENV_DEBUG ${DEBUGGER_ENV})
 
 if(UNIX)
 get_filename_component(COMPILER_DIR ${CMAKE_CXX_COMPILER} DIRECTORY)

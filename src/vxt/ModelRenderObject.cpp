@@ -307,6 +307,7 @@ namespace vxt
 		_joints.morphWeights = shape.morphWeights;
 		_joints.morphTargetCount = MaxNumMorphTargets;
 
+		_uniform->setData({});
 		addUniform(_uniform, _Binding_MVP);
 		_jointsUniform->setData(_joints);
 		addUniform(_jointsUniform, _Binding_Joints);
