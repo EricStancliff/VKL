@@ -1,5 +1,5 @@
 
-function(Configure_Test Target)
+function(Configure_Ex Target Folder)
 
 if(WIN32)
 set_target_properties(${Target} PROPERTIES VS_DEBUGGER_WORKING_DIRECTORY "$<TARGET_FILE_DIR:${Target}>")
@@ -7,7 +7,7 @@ set_target_properties(${Target} PROPERTIES VS_DEBUGGER_WORKING_DIRECTORY "$<TARG
 get_property(DEBUGGING_PATHS GLOBAL PROPERTY DEBUGGING_PATHS)
 get_property(DEBUGGER_ENV GLOBAL PROPERTY DEBUGGER_ENV)
 
-set(VS_DEBUGGER_ENV "PATH=${DEBUGGING_PATHS};${VKL_OUTPUT_DIR}/Debug;${VKL_OUTPUT_DIR}/Release\n")
+set(VS_DEBUGGER_ENV "PATH=${DEBUGGING_PATHS};")
 set(VS_DEBUGGER_ENV "${VS_DEBUGGER_ENV}${DEBUGGER_ENV}")
 
 set_target_properties(${Target} PROPERTIES VS_DEBUGGER_ENVIRONMENT "${VS_DEBUGGER_ENV}")
@@ -32,13 +32,13 @@ set_target_properties( ${Target}
     LIBRARY_OUTPUT_DIRECTORY_RELWITHDEBINFO ${VKL_OUTPUT_DIR}/RelWithDebInfo
     LIBRARY_OUTPUT_DIRECTORY_MINSIZEREL ${VKL_OUTPUT_DIR}/MinSizeRel
 
-    FOLDER "Tests"
+    FOLDER ${Folder}
 )
 else()
 set_target_properties( ${Target}
     PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY "${VKL_OUTPUT_DIR}"
-    FOLDER "Tests"
+    FOLDER ${Folder}
 )
 endif()
 endfunction()
@@ -71,4 +71,12 @@ set_target_properties( ${Target}
     FOLDER "Libraries"
 )
 endif()
+endfunction()
+
+function(Configure_App Target)
+Configure_Ex(${Target} "Apps")
+endfunction()
+
+function(Configure_Test Target)
+Configure_Ex(${Target} "Tests")
 endfunction()
