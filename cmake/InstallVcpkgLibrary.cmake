@@ -37,7 +37,9 @@ set(ENV{VCPKG_DEFAULT_TRIPLET} ${VCPKG_TARGET_TRIPLET})
 
 endfunction()
 
-function(InstallExternal_Ext_Private Target CMakeName)
+###PRIVATE
+#pull but don't find
+function(InstallExternal_Ext_Private Target)
 get_property(EXTERNAL_DIR GLOBAL PROPERTY EXTERNAL_DIR)
 get_property(VCPKG_EXE GLOBAL PROPERTY VCPKG_EXECECUTABLE)
 get_property(VCPKG_TARGET_TRIPLET GLOBAL PROPERTY VCPKG_TARGET_TRIPLET)
@@ -46,18 +48,23 @@ message(STATUS "***** Installing 3rd party dependencies *****")
 message(STATUS ${INSTALL_COMMAND})
 execute_process(COMMAND ${VCPKG_EXE} install ${Target} --x-install-root=${EXTERNAL_DIR}/.. OUTPUT_VARIABLE OUTPUT_STRING)
 message(STATUS "${OUTPUT_STRING}")
-set(CMAKE_PREFIX_PATH ${CMAKE_PREFIX_PATH} ${EXTERNAL_DIR}/share/${CMakeName})
 endfunction()
 
+#pull and find
 function(InstallExternal_Ext Target CMakeName)
-InstallExternal_Ext_Private(${Target} ${CMakeName})
+get_property(EXTERNAL_DIR GLOBAL PROPERTY EXTERNAL_DIR)
+InstallExternal_Ext_Private(${Target})
+set(CMAKE_PREFIX_PATH ${CMAKE_PREFIX_PATH} ${EXTERNAL_DIR}/share/${CMakeName})
 find_package("${CMakeName}" CONFIG REQUIRED)
 endfunction()
 
+###PUBLIC
+#pull and find
 function(InstallExternal Target)
 InstallExternal_Ext(${Target} ${Target})
 endfunction()
 
+#pull but don't find
 function(InstallExternalNoFind Target)
-InstallExternal_Ext_Private(${Target} ${CMakeName})
+InstallExternal_Ext_Private(${Target})
 endfunction()
