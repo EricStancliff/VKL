@@ -24,6 +24,7 @@ InitVcpkg()
 get_property(VCPKG_TARGET_TRIPLET GLOBAL PROPERTY VCPKG_TARGET_TRIPLET)
 set(EXTERNAL_DIR ${CMAKE_CURRENT_SOURCE_DIR}/external/${VCPKG_TARGET_TRIPLET})
 
+set(vkl_include_dir ${CMAKE_CURRENT_SOURCE_DIR}/include)
 
 InstallExternal(glm)
 InstallExternal(glfw3)

@@ -1,7 +1,4 @@
 
-set(vkl_include_dir ${CMAKE_SOURCE_DIR}/include)
-
-
 add_executable(triangle_vkl main.cpp)
 
 target_link_libraries(triangle_vkl PUBLIC vkl vxt)

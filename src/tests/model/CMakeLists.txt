@@ -1,6 +1,4 @@
 
-set(vkl_include_dir ${CMAKE_SOURCE_DIR}/include)
-
 
 add_executable(model_vkl main.cpp)
 

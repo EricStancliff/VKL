@@ -21,7 +21,6 @@ set(vkl_source
 	./Window.cpp
 	)
 
-set(vkl_include_dir ${CMAKE_SOURCE_DIR}/include)
 set(vkl_includes
 	${vkl_include_dir}/vkl/BufferManager.h
 	${vkl_include_dir}/vkl/CommandDispatcher.h

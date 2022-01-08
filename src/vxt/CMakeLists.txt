@@ -9,7 +9,6 @@ set(vxt_source
 	./PNGLoader.cpp
 	)
 
-set(vkl_include_dir ${CMAKE_SOURCE_DIR}/include)
 set(vxt_includes
 	${vkl_include_dir}/vxt/AssetFactory.h
 	${vkl_include_dir}/vxt/Camera.h
