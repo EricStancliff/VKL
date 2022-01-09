@@ -28,6 +28,8 @@ namespace vkl
 
 		std::shared_ptr<UniformBuffer> createUniformBuffer(const Device& device, const SwapChain& swapChain);
 
+		void cleanUnusedBuffers(const Device& device);
+
 		void cleanUp(const Device& device);
 
 	private:

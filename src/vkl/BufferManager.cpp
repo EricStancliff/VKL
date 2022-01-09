@@ -21,55 +21,23 @@ namespace vkl
 	{
 		for (auto itr = _indexBuffers.begin(); itr != _indexBuffers.end();)
 		{
-			if (itr->use_count() == 1)
-			{
-				(*itr)->cleanUp(device);
-				itr = _indexBuffers.erase(itr);
-			}
-			else
-			{
-				(*itr)->update(device, swapChain);
-				++itr;
-			}
+			(*itr)->update(device, swapChain);
+			++itr;
 		}
 		for (auto itr = _uniformBuffers.begin(); itr != _uniformBuffers.end();)
 		{
-			if (itr->use_count() == 1)
-			{
-				(*itr)->cleanUp(device);
-				itr = _uniformBuffers.erase(itr);
-			}
-			else
-			{
-				(*itr)->update(device, swapChain);
-				++itr;
-			}
+			(*itr)->update(device, swapChain);
+			++itr;
 		}
 		for (auto itr = _vertexBuffers.begin(); itr != _vertexBuffers.end();)
 		{
-			if (itr->use_count() == 1)
-			{
-				(*itr)->cleanUp(device);
-				itr = _vertexBuffers.erase(itr);
-			}
-			else
-			{
-				(*itr)->update(device, swapChain);
-				++itr;
-			}
+			(*itr)->update(device, swapChain);
+			++itr;
 		}
 		for (auto itr = _textureBuffers.begin(); itr != _textureBuffers.end();)
 		{
-			if (itr->use_count() == 1)
-			{
-				(*itr)->cleanUp(device);
-				itr = _textureBuffers.erase(itr);
-			}
-			else
-			{
-				(*itr)->update(device, swapChain);
-				++itr;
-			}
+			(*itr)->update(device, swapChain);
+			++itr;
 		}
 	}
 
@@ -96,6 +64,41 @@ namespace vkl
 		auto newOne = std::make_shared<UniformBuffer>(device, swapChain);
 		_uniformBuffers.emplace_back(newOne);
 		return newOne;
+	}
+	void BufferManager::cleanUnusedBuffers(const Device& device)
+	{
+		for (auto itr = _indexBuffers.begin(); itr != _indexBuffers.end();)
+		{
+			if (itr->use_count() == 1)
+			{
+				(*itr)->cleanUp(device);
+				itr = _indexBuffers.erase(itr);
+			}
+		}
+		for (auto itr = _uniformBuffers.begin(); itr != _uniformBuffers.end();)
+		{
+			if (itr->use_count() == 1)
+			{
+				(*itr)->cleanUp(device);
+				itr = _uniformBuffers.erase(itr);
+			}
+		}
+		for (auto itr = _vertexBuffers.begin(); itr != _vertexBuffers.end();)
+		{
+			if (itr->use_count() == 1)
+			{
+				(*itr)->cleanUp(device);
+				itr = _vertexBuffers.erase(itr);
+			}
+		}
+		for (auto itr = _textureBuffers.begin(); itr != _textureBuffers.end();)
+		{
+			if (itr->use_count() == 1)
+			{
+				(*itr)->cleanUp(device);
+				itr = _textureBuffers.erase(itr);
+			}
+		}
 	}
 	void BufferManager::cleanUp(const Device& device)
 	{
