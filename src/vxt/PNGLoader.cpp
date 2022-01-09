@@ -21,10 +21,9 @@ namespace vxt
         std::unique_lock<std::mutex> lock(getSTBMutex());
         auto retVal = (void*)stbi_load(filePath, &width, &height, &channels, STBI_rgb_alpha);
         channels = 4;
-        std::string fail = stbi_failure_reason();
-        if (!fail.empty())
+        if (stbi_failure_reason())
         {
-            std::cerr << fail << std::endl;
+            std::cerr << stbi_failure_reason() << std::endl;
         }
         return retVal;
 
@@ -40,10 +39,9 @@ namespace vxt
         std::unique_lock<std::mutex> lock(getSTBMutex());
         auto retVal = (void*)stbi_load(filePath, &width, &height, &channels, STBI_rgb_alpha);
         channels = 4;
-        std::string fail = stbi_failure_reason();
-        if (!fail.empty())
+        if (stbi_failure_reason())
         {
-            std::cerr << fail << std::endl;
+            std::cerr << stbi_failure_reason() << std::endl;
         }
         return retVal;
     }
@@ -57,10 +55,9 @@ namespace vxt
         std::unique_lock<std::mutex> lock(getSTBMutex());
         auto retVal = (void*)stbi_load_from_memory((const stbi_uc*)data, (int)size, &width, &height, &channels, STBI_rgb_alpha);
         channels = 4;
-        std::string fail = stbi_failure_reason();
-        if (!fail.empty())
+        if (stbi_failure_reason())
         {
-            std::cerr << fail << std::endl;
+            std::cerr << stbi_failure_reason() << std::endl;
         }
         return retVal;
     }
@@ -69,10 +66,9 @@ namespace vxt
         std::unique_lock<std::mutex> lock(getSTBMutex());
         auto retVal = (void*)stbi_load_from_memory((const stbi_uc*)data, (int)size, &width, &height, &channels, STBI_rgb_alpha);
         channels = 4;
-        std::string fail = stbi_failure_reason();
-        if (!fail.empty())
+        if (stbi_failure_reason())
         {
-            std::cerr << fail << std::endl;
+            std::cerr << stbi_failure_reason() << std::endl;
         }
         return retVal;
     }
