@@ -74,6 +74,10 @@ namespace vkl
 				(*itr)->cleanUp(device);
 				itr = _indexBuffers.erase(itr);
 			}
+			else
+			{
+				++itr;
+			}
 		}
 		for (auto itr = _uniformBuffers.begin(); itr != _uniformBuffers.end();)
 		{
@@ -81,6 +85,10 @@ namespace vkl
 			{
 				(*itr)->cleanUp(device);
 				itr = _uniformBuffers.erase(itr);
+			}
+			else
+			{
+				++itr;
 			}
 		}
 		for (auto itr = _vertexBuffers.begin(); itr != _vertexBuffers.end();)
@@ -90,6 +98,10 @@ namespace vkl
 				(*itr)->cleanUp(device);
 				itr = _vertexBuffers.erase(itr);
 			}
+			else
+			{
+				++itr;
+			}
 		}
 		for (auto itr = _textureBuffers.begin(); itr != _textureBuffers.end();)
 		{
@@ -97,6 +109,10 @@ namespace vkl
 			{
 				(*itr)->cleanUp(device);
 				itr = _textureBuffers.erase(itr);
+			}
+			else
+			{
+				++itr;
 			}
 		}
 	}
