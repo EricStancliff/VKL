@@ -6,6 +6,16 @@
 #include <fstream>
 #include <iostream>
 #include <cstring>
+#include <mutex>
+
+namespace {
+    std::mutex& getShaderCMutex()
+    {
+        static std::mutex stbMutex;
+        return stbMutex;
+    }
+}
+
 namespace vkl
 {
     shaderc_shader_kind shaderKind(VkShaderStageFlagBits stage)
@@ -123,6 +133,7 @@ namespace vkl
     }
     void GLSLShader::init(const char* data, size_t size)
     {
+        std::unique_lock<std::mutex> lock(getShaderCMutex());
         auto compiler = shaderc_compiler_initialize();
         auto options = shaderc_compile_options_initialize();
 
