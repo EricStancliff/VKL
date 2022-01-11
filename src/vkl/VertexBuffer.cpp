@@ -10,6 +10,7 @@ namespace vkl
     VertexBuffer::VertexBuffer(const Device& device, const SwapChain& swapChain)
     {
         _buffers.resize(swapChain.framesInFlight());
+        _dirties.resize(swapChain.framesInFlight());
     }
 
     void VertexBuffer::setData(void* data, size_t elementSize, size_t count)
@@ -18,19 +19,16 @@ namespace vkl
         _elementSize = elementSize;
         _oldCount = _count;
         _count = count;
-        _dirty = std::numeric_limits<int>::max();
+        for (auto&& dirty : _dirties)
+            dirty = true;
     }
 
     void VertexBuffer::update(const Device& device, const SwapChain& swapChain)
     {
-        if (_dirty == swapChain.frame())
-            _dirty = -1;
-
-        if (_dirty == -1)
+        if (!_dirties[swapChain.frame()])
             return;
 
-        if (_dirty == std::numeric_limits<int>::max())
-            _dirty = (int)swapChain.frame();
+        _dirties[swapChain.frame()] = false;
 
         auto& current = _buffers[swapChain.frame()];
 

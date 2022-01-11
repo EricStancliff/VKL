@@ -35,8 +35,7 @@ namespace vkl
 		};
 
 		std::vector<BufferInfo> _buffers;
-		
-		int _dirty{ -1 };
+		std::vector<bool> _dirties;
 	};
 
 	template <typename T>
