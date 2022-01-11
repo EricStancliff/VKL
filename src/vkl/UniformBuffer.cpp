@@ -10,6 +10,7 @@ namespace vkl
     UniformBuffer::UniformBuffer(const Device& device, const SwapChain& swapChain)
     {
         _buffers.resize(swapChain.framesInFlight());
+        _dirties.resize(swapChain.framesInFlight());
     }
 
     void UniformBuffer::setData(void* data, size_t size)
