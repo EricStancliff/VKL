@@ -223,8 +223,7 @@ namespace vxt
 			light.power = 1.f;
 			light.color = glm::one<glm::vec4>();
 
-			auto view = camera.view();
-			light.position = glm::inverse(view)[3];
+			light.position = {};
 
 			camera.setLight(_headlight, light);
 		}

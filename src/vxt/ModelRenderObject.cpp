@@ -176,7 +176,7 @@ vec3 microfacetModel( int lightIdx, vec3 position, vec3 n ) {
   vec3 l = vec3(0.0); 
   vec3 lightI = vec3(u_lights.lights[lightIdx].power) * u_lights.lights[lightIdx].color;  //"intensity"
 
-  vec3 lightPosition = (u_mvp.view * u_mvp.model * vec4(u_lights.lights[lightIdx].position, 1.f)).xyz;
+  vec3 lightPosition = u_lights.lights[lightIdx].position;
 
   l = lightPosition - position;
   float dist = length(l);
